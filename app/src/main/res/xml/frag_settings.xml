@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 注意!! android:key 的值有耦合問題，core lib 修改後這裡要一併修改 -->
+
+    <PreferenceCategory android:title="@string/personal">
+        <ListPreference android:key="player.gender"
+            android:title="@string/gender"
+            android:summary="@string/gender_summary"
+            android:defaultValue="male"
+            android:entries="@array/gender"
+            android:entryValues="@array/gender_values" />
+        <EditTextPreference android:key="player.age"
+            android:title="@string/age"
+            android:summary="@string/gender_summary"
+            android:defaultValue="25"
+            android:inputType="number" />
+        <EditTextPreference android:key="player.weight"
+            android:title="@string/weight"
+            android:summary="@string/weight_summary"
+            android:defaultValue="65"
+            android:inputType="number" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/bike">
+        <EditTextPreference android:key="player.rimdia"
+            android:title="@string/rim_diameter"
+            android:summary="@string/wheel_summary"
+            android:defaultValue="622"
+            android:inputType="number" />
+        <EditTextPreference android:key="player.tiredia"
+            android:title="@string/tire_diameter"
+            android:summary="@string/wheel_summary"
+            android:defaultValue="23"
+            android:inputType="number" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="其他">
+        <SwitchPreference android:key="player.expmode"
+            android:defaultValue="false"
+            android:title="體驗模式"
+            android:summary="以模擬資料體驗碼表效果" />
+    </PreferenceCategory>
+
+</PreferenceScreen>

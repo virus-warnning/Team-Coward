@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<level-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 注意!! 這裡不能用負數，會發生執行期錯誤 -->
+    <item android:drawable="@drawable/battery_000"
+        android:minLevel="0"
+        android:maxLevel="5" />
+    <item android:drawable="@drawable/battery_010"
+        android:minLevel="6"
+        android:maxLevel="15" />
+    <item android:drawable="@drawable/battery_025"
+        android:minLevel="16"
+        android:maxLevel="45" />
+    <item android:drawable="@drawable/battery_050"
+        android:minLevel="46"
+        android:maxLevel="70" />
+    <item android:drawable="@drawable/battery_075"
+        android:minLevel="71"
+        android:maxLevel="90" />
+    <item android:drawable="@drawable/battery_100"
+        android:minLevel="91"
+        android:maxLevel="100" />
+    <item android:drawable="@drawable/nothing"
+        android:minLevel="101"
+        android:maxLevel="200" />
+</level-list>

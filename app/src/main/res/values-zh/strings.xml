@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">膽小車隊</string>
+    <string name="facebook_app_id">397783553703639</string>
+
+    <!-- 感應器 -->
+    <string name="sensor_hrm">心率計</string>
+    <string name="sensor_power">功率計</string>
+    <string name="sensor_cadspd">速度踏頻計</string>
+    <string name="sensor_cadence">踏頻計</string>
+    <string name="sensor_speed">速度計</string>
+
+    <!-- 掃描動作 -->
+    <string name="scan">掃描</string>
+    <string name="scanning">掃描中，請稍候 %d 秒 ...</string>
+    <string name="click_to_scan">請按 \"掃描\" 按鈕尋找周圍的感應器</string>
+    <string name="incompatible_hint">唉呀! 你的手機不相容任何感應器</string>
+    <string name="scan_guide_msg1">你的手機能相容這類感應器</string>
+    <string name="scan_guide_ant">ANT+ 感應器</string>
+    <string name="scan_guide_ble">Bluetooth Smart 感應器</string>
+    <string name="scan_guide_msg2">相容的感應器，可以在這裡掃描與配對</string>
+    <string name="scan_guide_skip">以後不用提示了</string>
+    <string name="scan_guide_isee">我知道了!</string>
+
+    <!-- 設定 -->
+    <string name="personal">個人資訊</string>
+    <string name="gender">性別</string>
+    <string name="age">年齡</string>
+    <string name="weight">體重</string>
+    <string name="bike">單車資訊</string>
+    <string name="rim_spec">輪組規格</string>
+    <string name="tire_spec">外胎規格</string>
+
+    <!-- 關於 -->
+    <string name="ant_feature">ANT 訊號模組</string>
+    <string name="ant_radio_service">ANT 無線訊號服務</string>
+    <string name="antplus_plugins_service">ANT+ 配件服務</string>
+    <string name="bluetooth_smart">藍芽低功率服務</string>
+    <string name="android_os">Android 系統</string>
+    <string name="device_model">機型</string>
+    <string name="compatible">相容</string>
+    <string name="incompatible">不相容</string>
+    <string name="available">有</string>
+    <string name="not_available">無</string>
+    <string name="resolution_x">橫向解析度</string>
+    <string name="resolution_y">縱向解析度</string>
+    <string name="signal_service">訊號服務</string>
+
+    <!-- 系統通知 -->
+    <string name="update_ant_title">需要 ANT+ 連線工具</string>
+    <string name="update_ant_text">按一下更新 ANT Radio Service</string>
+    <string name="update_antplus_title">需要 ANT+ 連線工具</string>
+    <string name="update_antplus_text">按一下更新 ANT+ Plugins Service</string>
+
+    <!-- 不翻譯項目 -->
+    <string name="mock_address">01:23:45:67:89:ab</string>
+    <string name="mock_manufacturer">小璋丸工作室</string>
+    <string name="mock_battery">37%</string>
+    <string name="mock_content_desc">...</string>
+    <string name="mock_full_version">version x.y.z</string>
+    <string name="mock_version">x.y.z</string>
+    <string name="mock_model">XYZ001a</string>
+    <string name="mock_res_x">1280</string>
+    <string name="mock_res_y">720</string>
+    <string name="mock_heart_rate">137</string>
+    <string name="mock_power">174</string>
+
+    <!-- 偏好設定 -->
+    <string-array name="gender">
+        <item>男性</item>
+        <item>女性</item>
+    </string-array>
+    <string-array name="gender_values">
+        <item>male</item>
+        <item>female</item>
+    </string-array>
+    <string name="rim_diameter">輪框直徑</string>
+    <string name="tire_diameter">胎寬</string>
+    <string name="gender_summary">用於計算熱量消耗</string>
+    <string name="weight_summary">單位 kg，用於計算熱量消耗</string>
+    <string name="wheel_summary">單位 mm，用於換算速度</string>
+
+</resources>

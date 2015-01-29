@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- Fragment 分頁器 -->
+    <android.support.v4.view.ViewPager
+        android:id="@+id/pager"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+    </android.support.v4.view.ViewPager>
+
+    <!-- 導覽列 -->
+    <FrameLayout android:id="@+id/sv_navi_menu"
+        android:layout_width="320dp"
+        android:layout_height="100dp"
+        android:layout_gravity="center"
+        android:background="@drawable/border_navimenu">
+
+        <LinearLayout android:id="@+id/sv_navi_items"
+            android:orientation="horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginLeft="-200dp">
+
+            <TextView
+                android:layout_width="100dp"
+                android:layout_height="85dp"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:width="100dp"
+                android:height="85dp" />
+
+            <TextView
+                android:layout_width="100dp"
+                android:layout_height="85dp"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:gravity="center_horizontal"
+                android:text="感應器"
+                android:drawableTop="@drawable/logo"
+                android:id="@+id/tx2"
+                android:textColor="@color/light_text" />
+
+            <TextView
+                android:layout_width="100dp"
+                android:layout_height="85dp"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:gravity="center_horizontal"
+                android:text="求救"
+                android:drawableTop="@drawable/logo"
+                android:id="@+id/tx4"
+                android:textColor="@color/light_text" />
+
+            <TextView
+                android:layout_width="100dp"
+                android:layout_height="85dp"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:gravity="center_horizontal"
+                android:text="碼表"
+                android:drawableTop="@drawable/logo"
+                android:id="@+id/tx1"
+                android:textColor="@color/light_text" />
+
+            <TextView
+                android:layout_width="100dp"
+                android:layout_height="85dp"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:gravity="center_horizontal"
+                android:text="設定"
+                android:drawableTop="@drawable/logo"
+                android:id="@+id/tx3"
+                android:textColor="@color/light_text" />
+
+            <TextView
+                android:layout_width="100dp"
+                android:layout_height="85dp"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:gravity="center_horizontal"
+                android:text="關於"
+                android:drawableTop="@drawable/logo"
+                android:id="@+id/tx5"
+                android:textColor="@color/light_text" />
+
+            <TextView
+                android:layout_width="100dp"
+                android:layout_height="85dp"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:gravity="center_horizontal" />
+        </LinearLayout>
+
+    </FrameLayout>
+
+</FrameLayout>

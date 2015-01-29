@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <bitmap android:src="@drawable/power96"
+            android:gravity="center" />
+    </item>
+    <item>
+        <bitmap android:src="@drawable/corner_antplus"
+            android:gravity="right|bottom" />
+    </item>
+</layer-list>

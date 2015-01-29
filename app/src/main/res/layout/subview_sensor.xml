@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal" android:layout_width="300dp"
+    android:layout_height="64dp"
+    android:background="@drawable/border_sensor"
+    android:clickable="false">
+
+    <RelativeLayout
+        android:layout_width="60dp"
+        android:layout_height="60dp">
+
+        <ImageView
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:id="@+id/iv_sensor_icon"
+            android:src="@drawable/sensor_ble_heart"
+            android:contentDescription="@string/mock_content_desc" />
+
+    </RelativeLayout>
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="230dp"
+        android:layout_height="60dp"
+        android:paddingLeft="8dp"
+        android:paddingRight="0dp">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="20dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_alignParentLeft="true"
+                android:text="@string/sensor_power"
+                android:id="@+id/txv_sensor_name" />
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_alignParentRight="true"
+                android:id="@+id/iv_signal"
+                android:src="@drawable/signal_level"
+                android:background="@drawable/border_signal"
+                android:contentDescription="@string/mock_content_desc"
+                android:layout_marginRight="3dp" />
+
+            <ImageView
+                android:layout_width="30dp"
+                android:layout_height="18dp"
+                android:layout_toLeftOf="@id/iv_signal"
+                android:id="@+id/iv_battery"
+                android:src="@drawable/battery_level"
+                android:contentDescription="@string/mock_content_desc"
+                android:layout_marginRight="3dp" />
+
+            <TextView
+                android:layout_width="40dp"
+                android:layout_height="match_parent"
+                android:layout_toLeftOf="@id/iv_battery"
+                android:text="@string/mock_battery"
+                android:id="@+id/txv_battery"
+                android:gravity="right|top" />
+
+        </RelativeLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="20dp"
+            android:text="@string/mock_content_desc"
+            android:id="@+id/txv_manufacturer" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="20dp"
+            android:text="@string/mock_address"
+            android:id="@+id/txv_sensor_addr" />
+
+    </LinearLayout>
+
+</LinearLayout>

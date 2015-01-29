@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Team Coward</string>
+    <string name="facebook_app_id">397783553703639</string>
+
+    <!-- 感應器 -->
+    <string name="sensor_hrm">HRM</string>
+    <string name="sensor_power">Power</string>
+    <string name="sensor_cadspd">Cadence+Speed</string>
+    <string name="sensor_cadence">Cadence</string>
+    <string name="sensor_speed">Speed</string>
+
+    <!-- 掃描動作 -->
+    <string name="scan">Scan</string>
+    <string name="scanning">Wait %s seconds ...</string>
+    <string name="click_to_scan">Click scan button to find sensors.</string>
+    <string name="incompatible_hint">Oops! This phone is not compatible with any sensor.</string>
+    <string name="scan_guide_msg1">This phone is compatible with the following kinds of sensors:</string>
+    <string name="scan_guide_ant">ANT+ sensors</string>
+    <string name="scan_guide_ble">Bluetooth Smart sensors</string>
+    <string name="scan_guide_msg2">The kind(s) of sensors can be scanned and paired here.</string>
+    <string name="scan_guide_skip">Never tell me again.</string>
+    <string name="scan_guide_isee">I see!</string>
+
+    <!-- 設定 -->
+    <string name="personal">Personal Info</string>
+    <string name="gender">Gender</string>
+    <string name="age">Age</string>
+    <string name="weight">Weight</string>
+    <string name="bike">Bike Info</string>
+    <string name="rim_spec">Rim Specification</string>
+    <string name="tire_spec">Tire Specification</string>
+
+    <!-- 關於 -->
+    <string name="ant_feature">ANT Feature</string>
+    <string name="ant_radio_service">ANT Radio Service</string>
+    <string name="antplus_plugins_service">ANT+ Plugins Service</string>
+    <string name="bluetooth_smart">Bluetooth Smart</string>
+    <string name="android_os">Android OS</string>
+    <string name="device_model">Device Model</string>
+    <string name="compatible">Compatible</string>
+    <string name="incompatible">Incompatible</string>
+    <string name="available">Available</string>
+    <string name="not_available">Not available</string>
+    <string name="resolution_x">Resolution X</string>
+    <string name="resolution_y">Resolution Y</string>
+    <string name="signal_service">Signal Service</string>
+
+    <!-- 系統通知 -->
+    <string name="update_ant_title">Need ANT+ dependency</string>
+    <string name="update_ant_text">Click to update ANT Radio Service</string>
+    <string name="update_antplus_title">Need ANT+ dependency</string>
+    <string name="update_antplus_text">Click to update ANT+ Plugins Service</string>
+
+    <!-- 不翻譯項目 -->
+    <string name="mock_address">01:23:45:67:89:ab</string>
+    <string name="mock_manufacturer">Tacoball Studio</string>
+    <string name="mock_battery">37%</string>
+    <string name="mock_content_desc">...</string>
+    <string name="mock_full_version">version x.y.z</string>
+    <string name="mock_version">x.y.z</string>
+    <string name="mock_model">XYZ001a</string>
+    <string name="mock_res_x">1280</string>
+    <string name="mock_res_y">720</string>
+    <string name="mock_heart_rate">137</string>
+    <string name="mock_power">174</string>
+
+    <!-- 偏好設定 -->
+    <string-array name="gender">
+        <item>Male</item>
+        <item>Female</item>
+    </string-array>
+    <string-array name="gender_values">
+        <item>male</item>
+        <item>female</item>
+    </string-array>
+    <string name="rim_diameter">Rim diameter</string>
+    <string name="tire_diameter">Tire diameter</string>
+    <string name="gender_summary">用於計算熱量消耗</string>
+    <string name="weight_summary">單位 kg，用於計算熱量消耗</string>
+    <string name="wheel_summary">單位 mm，用於換算速度</string>
+
+</resources>
