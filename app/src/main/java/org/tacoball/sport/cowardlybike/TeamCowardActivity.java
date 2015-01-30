@@ -448,7 +448,11 @@ public class TeamCowardActivity extends Activity {
 
         // 顯示烤土司訊息
         // TODO: 多國語系處理
-        Toast.makeText(this, "很抱歉！膽小車隊 APP 僅供膽小車隊成員使用", Toast.LENGTH_LONG).show();
+        if (hasInternet()) {
+            Toast.makeText(this, "很抱歉！膽小車隊 APP 僅供膽小車隊成員使用", Toast.LENGTH_LONG).show();
+        } else {
+            Toast.makeText(this, "請開啟網路，確認您是否為膽小車隊車友", Toast.LENGTH_LONG).show();
+        }
     }
 
     /**
