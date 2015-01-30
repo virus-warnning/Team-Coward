@@ -13,6 +13,64 @@
         android:contentDescription="@string/mock_content_desc"
         android:layout_alignParentTop="false" />
 
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="195dp"
+        android:background="@drawable/border_dashed_rect">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/iv_d2"
+            android:src="@drawable/distance_digit"
+            android:contentDescription="@string/mock_content_desc"
+            android:layout_marginLeft="5dp" />
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/iv_d1"
+            android:src="@drawable/distance_digit"
+            android:contentDescription="@string/mock_content_desc" />
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/iv_d0"
+            android:src="@drawable/distance_digit"
+            android:contentDescription="@string/mock_content_desc"/>
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/iv_dot"
+            android:src="@drawable/digit_dot"
+            android:contentDescription="@string/mock_content_desc"/>
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/iv_dn1"
+            android:src="@drawable/distance_digit"
+            android:contentDescription="@string/mock_content_desc"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="K"
+            android:id="@+id/txv_dist_unit"
+            android:layout_marginLeft="3dp"
+            android:textColor="#000"
+            android:textSize="8pt"
+            android:textStyle="bold"
+            android:layout_marginTop="-3dp" />
+
+    </LinearLayout>
+
     <ImageView android:id="@+id/iv_speed"
         android:layout_width="200dp"
         android:layout_height="200dp"
@@ -95,7 +153,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/iv_cat_pink"
-        android:src="@drawable/cat_pink"
+        android:src="@drawable/cat_status"
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="94dp"
         android:layout_alignParentBottom="true"
@@ -105,7 +163,7 @@
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:id="@+id/iv_wheel"
-        android:src="@drawable/wheel_level"
+        android:src="@drawable/wheel_status"
         android:layout_centerHorizontal="true"
         android:layout_alignParentBottom="true"
         android:layout_marginBottom="62dp"
@@ -155,63 +213,5 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentBottom="true"
         android:textSize="8pt" />
-
-    <LinearLayout
-        android:orientation="horizontal"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginBottom="195dp"
-        android:background="@drawable/border_dashed_rect">
-
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/iv_d2"
-            android:src="@drawable/distance_digit"
-            android:contentDescription="@string/mock_content_desc"
-            android:layout_marginLeft="5dp" />
-
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/iv_d1"
-            android:src="@drawable/distance_digit"
-            android:contentDescription="@string/mock_content_desc" />
-
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/iv_d0"
-            android:src="@drawable/distance_digit"
-            android:contentDescription="@string/mock_content_desc"/>
-
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/iv_dot"
-            android:src="@drawable/digit_dot"
-            android:contentDescription="@string/mock_content_desc"/>
-
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/iv_dn1"
-            android:src="@drawable/distance_digit"
-            android:contentDescription="@string/mock_content_desc"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="K"
-            android:id="@+id/txv_dist_unit"
-            android:layout_marginLeft="3dp"
-            android:textColor="#000"
-            android:textSize="8pt"
-            android:textStyle="bold"
-            android:layout_marginTop="-3dp" />
-
-    </LinearLayout>
 
 </RelativeLayout>

@@ -36,6 +36,7 @@ import java.util.List;
  */
 public class PanelFragment extends Fragment {
 
+    // 除錯標籤
     private static final String TAG = "BikePanelFragment";
 
     // 六項數據的最大值
@@ -54,7 +55,7 @@ public class PanelFragment extends Fragment {
     private ImageView mIvD1;
     private ImageView mIvD0;
     private ImageView mIvDN1;
-    private ImageView mIvCatPink;
+    private ImageView mIvCat;
     private ImageView mIvWheel;
     private TextView  mTxvHeartRate;
     private TextView  mTxvPower;
@@ -69,7 +70,7 @@ public class PanelFragment extends Fragment {
     private Bitmap mBmpCaloriesPin; // 卡路里指針
 
     // 執行緒管理器
-    private Handler mHandler = new Handler();
+    private Handler mHandler = Utils.getSharedHandler();
 
     // 實際速度值
     private int mLatestSpeed = 0;
@@ -79,14 +80,25 @@ public class PanelFragment extends Fragment {
     private List<Float> mGradualSpeed = new LinkedList<Float>();
     private List<Float> mGradualCadence = new LinkedList<Float>();
 
-    // 目前碼表開關狀態
-    private boolean mIsMeterOn = false;
-
     // 訊號服務的工作狀態
     private SignalService.State mServiceState;
 
     // 設定值
     private Settings mSettings;
+
+    // 輪子按鈕的五種狀態
+    // drawable/wheel_status.xml
+    private static final int WHEEL_STOPPED = 0;
+    private static final int WHEEL_STARTED = 1;
+    private static final int WHEEL_SLOW    = 2;
+    private static final int WHEEL_FAST    = 3;
+    private static final int WHEEL_LOADING = 4;
+
+    // 貓貓的三種狀態
+    // drawable/cat_status.xml
+    private static final int CAT_STOP = 0;
+    private static final int CAT_RUN_SLOW = 1;
+    private static final int CAT_RUN_FAST = 2;
 
     public PanelFragment() {
         super();
@@ -114,7 +126,7 @@ public class PanelFragment extends Fragment {
         mIvCalories = (ImageView)rootView.findViewById(R.id.iv_calories);
 
         // 小貓與輪子
-        mIvCatPink = (ImageView)rootView.findViewById(R.id.iv_cat_pink);
+        mIvCat = (ImageView)rootView.findViewById(R.id.iv_cat_pink);
         mIvWheel   = (ImageView)rootView.findViewById(R.id.iv_wheel);
 
         // 距離數字
@@ -148,10 +160,6 @@ public class PanelFragment extends Fragment {
         //--------------------
 
         // 接收輪子圖點擊事件
-        // 0~3: 輪子四種角度
-        //   4: 開始鈕
-        //   5: 停止鈕
-        // TODO: 需要增加啟動中/關閉中的示意圖
         mIvWheel.setOnClickListener(mOnClick);
 
         // 載入設定值
@@ -230,15 +238,18 @@ public class PanelFragment extends Fragment {
                     // 關閉狀態時，小圖換成開始鈕
                     String stateName = signal.getString(SignalBuilder.S_STATE);
                     mServiceState = SignalService.State.valueOf(stateName);
-                    Log.d(TAG, String.format("服務狀態: %s", stateName));
+                    // TODO: 這裡最好改成 updateStatus() 降低複雜度
+                    int wheel_level = WHEEL_STOPPED;
                     switch(mServiceState) {
                         case STARTED:
-                            mIvWheel.setImageLevel(5);
+                            wheel_level = WHEEL_STARTED;
                             break;
-                        case STOPPED:
-                            mIvWheel.setImageLevel(4);
+                        case STARTING:
+                        case STOPPING:
+                            wheel_level = WHEEL_LOADING;
                             break;
                     }
+                    mIvWheel.setImageLevel(wheel_level);
                     break;
                 case SignalBuilder.TYPE_TEMPERATURE:
                     // !! 如果溫度為攝氏 100, 表示找不到溫度計
@@ -275,7 +286,6 @@ public class PanelFragment extends Fragment {
 
     /**
      * 數值換算指針角度
-     * TODO: 回傳值改用 float 可能視覺效果較理想
      *
      * @param value  數值
      * @param max    最大值
@@ -329,6 +339,19 @@ public class PanelFragment extends Fragment {
 
             // 最後一個為最終動作
             mGradualSpeed.add((float)mLatestSpeed);
+
+            if (speed==0) {
+                mIvWheel.setImageLevel(WHEEL_STARTED);
+                mIvCat.setImageLevel(CAT_STOP);
+            } else {
+                if (speed>20) {
+                    mIvWheel.setImageLevel(WHEEL_FAST);
+                    mIvCat.setImageLevel(CAT_RUN_FAST);
+                } else {
+                    mIvWheel.setImageLevel(WHEEL_SLOW);
+                    mIvCat.setImageLevel(CAT_RUN_SLOW);
+                }
+            }
         }
     }
 
@@ -432,7 +455,8 @@ public class PanelFragment extends Fragment {
 
         // 小貓調整至初始狀態
         // 電量與溫度值消除
-        mIvCatPink.setImageLevel(6);
+        mIvWheel.setImageLevel(WHEEL_STOPPED);
+        mIvCat.setImageLevel(CAT_STOP);
         mTxvBattery.setText("");
         mTxvTemperature.setText("");
     }
@@ -446,34 +470,22 @@ public class PanelFragment extends Fragment {
         public void onClick(View view) {
             Log.d(TAG, String.format("目前服務狀態: %s", mServiceState.name()));
 
-            // 未啟動狀態 > 進入已啟動狀態，啟動動畫迴圈
-            if (mServiceState==SignalService.State.STOPPED) {
-                mIsMeterOn = true;
-
-                // 開啟運動訊息服務
-                Intent intent = new Intent(getActivity(), SignalService.class);
-                intent.putExtra("Request", SignalService.Request.START.name());
-                getActivity().startService(intent);
-                mHandler.postDelayed(mGradualTask, 100);
-
-                // 膽小貓與輪子動畫效果
-                // TODO: 這裡併入漸進動作迴圈
-                mHandler.postDelayed(mWheelAnimation, 100);
-            }
-
-            // 已啟動狀態
-            // - 靜止狀態: 停止訊號服務
-            // - 移動狀態: 不可操作，按鈕變成輪子動畫
-            if (mServiceState==SignalService.State.STARTED) {
-                if (mLatestSpeed==0) {
-                    // 關閉運動訊息服務
-                    Intent intent = new Intent(getActivity(), SignalService.class);
-                    intent.putExtra("Request", SignalService.Request.STOP.name());
+            Intent intent = new Intent(getActivity(), SignalService.class);
+            switch(mServiceState) {
+                case STOPPED:
+                    // 開啟運動訊息服務
+                    intent.putExtra("Request", SignalService.Request.START.name());
                     getActivity().startService(intent);
-
-                    mIsMeterOn = false;
-                    mHandler.removeCallbacksAndMessages(null);
-                }
+                    mHandler.postDelayed(mGradualTask, 100);
+                    break;
+                case STARTED:
+                    if (mLatestSpeed==0) {
+                        // 關閉運動訊息服務
+                        intent.putExtra("Request", SignalService.Request.STOP.name());
+                        getActivity().startService(intent);
+                        mHandler.removeCallbacksAndMessages(null);
+                    }
+                    break;
             }
         }
 
@@ -489,7 +501,9 @@ public class PanelFragment extends Fragment {
 
         @Override
         public void run() {
-            if (!mIsMeterOn) return;
+            if (mServiceState!=SignalService.State.STARTED) {
+                return;
+            }
 
             float drawDegrees;
 
@@ -509,37 +523,6 @@ public class PanelFragment extends Fragment {
 
             // 0.1 秒後製作下一個 frame
             mHandler.postDelayed(this, DELAY);
-        }
-
-    };
-
-    /**
-     * 輪子轉動效果
-     */
-    private Runnable mWheelAnimation = new Runnable() {
-
-        int mCatLevel   = 0;
-        int mWheelLevel = 0;
-
-        @Override
-        public void run() {
-            if (mServiceState!=SignalService.State.STOPPED) {
-                if (mLatestSpeed==0) {
-                    // 服務啟動中 & 速度=0
-                    mIvCatPink.setImageLevel(6);
-                    mIvWheel.setImageLevel(5);
-                } else {
-                    // 服務啟動中 & 速度>0
-                    mCatLevel   = (mCatLevel+1)%6;
-                    mWheelLevel = (mWheelLevel+1)&3;
-                    mIvCatPink.setImageLevel(mCatLevel);
-                    mIvWheel.setImageLevel(mWheelLevel);
-                }
-
-                // 依目前速度調整動畫速度
-                long delay = (mLatestSpeed>=20) ? 75 : 250;
-                mHandler.postDelayed(this, delay);
-            }
         }
 
     };
