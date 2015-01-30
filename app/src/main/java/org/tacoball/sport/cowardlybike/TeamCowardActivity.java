@@ -56,7 +56,7 @@ public class TeamCowardActivity extends Activity {
     FrameLayout  mNaviMenu;
     LinearLayout mNaviItems;
 
-    Handler mHandler = new Handler();
+    Handler mHandler = Utils.getSharedHandler();
     ViewPager mPager;
     Settings mSettings;
     MainPagerAdapter mPagerAdapter = new MainPagerAdapter(getFragmentManager());
@@ -110,19 +110,16 @@ public class TeamCowardActivity extends Activity {
         //onSessionCreated();
         //if (true) return;
 
-        mHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if (hasInternet()) {
-                    Log.d(TAG, "有網路連線");
-                    checkFacebookMembership();
-                    // TODO: 以後要增加中國用的項目
-                } else {
-                    Log.d(TAG, "無網路連線");
-                    checkOffline();
-                }
+        if (isPassedIn12Hr()) {
+            onSessionCreated();
+        } else {
+            if (hasInternet()) {
+                checkFacebookMembership();
+                // TODO: 以後要增加中國用的項目
+            } else {
+                checkOffline();
             }
-        }, 1500);
+        }
     }
 
     /**
@@ -157,7 +154,8 @@ public class TeamCowardActivity extends Activity {
      * 已登入 UI 配置
      */
     private void onSessionCreated() {
-        Log.d(TAG, "已登入");
+        // 記錄最後開啟時間
+        mSettings.setCustomizedLong("player.auth.touch", System.currentTimeMillis());
 
         // 翻頁器切換成已登入模式
         mPagerAdapter.setLogined(true);
@@ -267,11 +265,24 @@ public class TeamCowardActivity extends Activity {
     /**
      * 檢查是否有網路連線
      *
-     * @return 不知道
+     * @return 是否有網路連線
      */
     private boolean hasInternet() {
         ConnectivityManager cm = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
         return (cm.getActiveNetworkInfo()!=null);
+    }
+
+    /**
+     * 檢查是否 12 小時內曾經驗證過
+     *
+     * @return 是否 12 小時內曾經驗證過
+     */
+    private boolean isPassedIn12Hr() {
+        long touch = mSettings.getCustomizedLong("player.auth.touch");
+        long now   = System.currentTimeMillis();
+        long diffHours = (now-touch)/1000/60/60;
+
+        return (diffHours<12);
     }
 
     /**
@@ -345,7 +356,12 @@ public class TeamCowardActivity extends Activity {
                         if (api==API_MEMBERS) {
                             List<GraphObject> objects = gobj.getPropertyAsList("data", GraphObject.class);
                             if (objects.size()>0) {
-                                onAuthPassed("Facebook");     // 隸屬膽小車隊
+                                mHandler.postDelayed(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        onAuthPassed("Facebook");     // 隸屬膽小車隊
+                                    }
+                                }, 1000);
                             } else {
                                 String id = mSettings.getCustomizedString("player.auth.facebook_id");
                                 if (FACEBOOK_VIP.contains(id)) {
@@ -383,7 +399,7 @@ public class TeamCowardActivity extends Activity {
 
                     int remaining = 90-datediff;
                     if (remaining<14) {
-                        String msg = String.format("還剩下 %d 天可以離線操作，有空請打開網路重新確認膽小車友身分喔！");
+                        String msg = String.format("還剩下 %d 天可以離線操作，有空請打開網路重新確認膽小車友身分喔！", remaining);
                         Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
                     }
                 } else {
