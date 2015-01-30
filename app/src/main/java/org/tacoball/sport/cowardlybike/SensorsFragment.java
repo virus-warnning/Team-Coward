@@ -22,6 +22,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.tacoball.sport.signals.Settings;
+import com.tacoball.sport.signals.hal.DeviceInfo;
 import com.tacoball.sport.signals.hal.DeviceReceiver;
 import com.tacoball.sport.signals.hal.DeviceScanner;
 
@@ -49,31 +50,15 @@ public class SensorsFragment extends Fragment {
     int mSensorCount = 0;
     int mScanCounter;
 
-    // SensorModel 選項
-    // TODO: 這裡似乎用 DeviceReceiver 的列舉值即可
-    enum SensorType { HRM, CSC, PWR, UNKNOWN }
-    enum RadioType  { ANT, BLE }
-
-    // Sensor 資料
-    private class SensorModel {
-        public SensorType sensorType = SensorType.HRM;
-        public RadioType  radioType  = RadioType.ANT;
-        public String     name;
-        public String     manufacturer;
-        public String     address;
-        public int        batteryLevel;
-        public int        signalLevel;
-        public boolean    paired;
-    }
-
     // Sensor 視覺資料
     private List<View> mViewList = new ArrayList<View>();
-    private List<SensorModel> mModelList = new ArrayList<SensorModel>();
+    private List<DeviceInfo> mModelList = new ArrayList<DeviceInfo>();
 
     // 模擬掃描功能設定
+    // TODO: 之後需要搬到 SportSignal Core
     private static final boolean ENABLE_MOCK_DATA = false;
     private static final int MOCK_SENSORS_TOTAL = 6;
-    private static final SensorModel[] mMockSensors = new SensorModel[MOCK_SENSORS_TOTAL];
+    private static final DeviceInfo[] mMockSensors = new DeviceInfo[MOCK_SENSORS_TOTAL];
 
     /**
      * 啟動配置
@@ -106,16 +91,18 @@ public class SensorsFragment extends Fragment {
         // 使用模擬模式時，產生模擬資料
         if (ENABLE_MOCK_DATA) {
             for (int i=0;i<6;i++) {
-                mMockSensors[i] = new SensorModel();
-                mMockSensors[i].radioType = (i%2==0) ? RadioType.ANT : RadioType.BLE;
-                mMockSensors[i].manufacturer = (i%2==0) ? "Karnim" : "Tacoball Studio";
-                mMockSensors[i].address =  (i%2==0) ? "0x3dac (15788)" : "01:23:45:67:89:ab";
-                mMockSensors[i].batteryLevel = 100-i*15;
+                String           id    = (i%2==0) ? "0x3dac (15788)" : "01:23:45:67:89:ab";
+                DeviceInfo.Radio radio = (i%2==0) ? DeviceInfo.Radio.ANT : DeviceInfo.Radio.BLE;
+                DeviceInfo.Type  type  = DeviceInfo.Type.UNKNOWN;
                 switch (i%3) {
-                    case 0: mMockSensors[i].sensorType = SensorType.HRM; break;
-                    case 1: mMockSensors[i].sensorType = SensorType.CSC; break;
-                    case 2: mMockSensors[i].sensorType = SensorType.PWR; break;
+                    case 0: type = DeviceInfo.Type.HRM; break;
+                    case 1: type = DeviceInfo.Type.CSC; break;
+                    case 2: type = DeviceInfo.Type.PWR; break;
                 }
+
+                mMockSensors[i] = new DeviceInfo(id, radio, type);
+                mMockSensors[i].setManufacturer((i%2==0) ? "Karnim" : "Tacoball Studio");
+                mMockSensors[i].setBattery(100-i*15);
             }
         } else {
             mDeviceScanner = new DeviceScanner(getActivity());
@@ -145,6 +132,8 @@ public class SensorsFragment extends Fragment {
 
         // 載入設定工具
         mSettings = new Settings(getActivity());
+
+        loadSensors();
 
         // 測試用，強制移除所有配對裝置
         //mSettings.reset();
@@ -187,6 +176,7 @@ public class SensorsFragment extends Fragment {
         if (!ble_compat) tbl_proto.removeViewAt(1);
 
         // 不再提示處理
+        // TODO: 這裡要防止在碼錶頁顯示
         final CheckBox chkNeverHint = (CheckBox)vGuide.findViewById(R.id.chk_never_hint);
         chkNeverHint.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -197,7 +187,7 @@ public class SensorsFragment extends Fragment {
                 } else {
                     editor.putBoolean("scanner.never_hint", false);
                 }
-                editor.commit();
+                editor.apply();
             }
         });
 
@@ -220,17 +210,16 @@ public class SensorsFragment extends Fragment {
     /**
      * 增加一個感應器資訊
      *
-     * @param model 感應器資訊
+     * @param devInfo 感應器資訊
      */
-    private void addSensor(SensorModel model) {
+    private void addSensor(DeviceInfo devInfo) {
         // TODO: 如果掃描到不會用到的感應器，不要做新增動作
-
         LinearLayout ly_sensorInfo = (LinearLayout)mInflater.inflate(R.layout.subview_sensor, mContainer, false);
         ly_sensorInfo.setOnClickListener(mOnClick);
-        ly_sensorInfo.setTag(model.address);
+        ly_sensorInfo.setTag(devInfo.getId());
 
         mViewList.add(ly_sensorInfo);
-        mModelList.add(model);
+        mModelList.add(devInfo);
 
         // 加到 GridLayout 裡面
         GridLayout.LayoutParams lp = new GridLayout.LayoutParams();
@@ -238,19 +227,30 @@ public class SensorsFragment extends Fragment {
         lp.bottomMargin = 2;
         mGlSensorPanel.addView(ly_sensorInfo, lp);
 
-        updateSensor(model);
+        //
+        final DeviceInfo devInfoF = devInfo;
+        mHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                updateSensor(devInfoF);
+            }
+        }, 100);
+
     }
 
     /**
      * 感應器資訊
      *
-     * @param model 感應器資訊
+     * @param devInfo 感應器資訊
      */
-    private void updateSensor(SensorModel model) {
-        LinearLayout lySensorInfo = (LinearLayout)mContainer.findViewWithTag(model.address);
+    private void updateSensor(DeviceInfo devInfo) {
+        LinearLayout lySensorInfo = (LinearLayout)mContainer.findViewWithTag(devInfo.getId());
 
         // 這種情況有發生的可能性 XD
-        if (lySensorInfo==null) return;
+        if (lySensorInfo==null) {
+            Log.d(TAG, "fuck");
+            return;
+        }
 
         // 以下要改為 add/update 共用
         ImageView ivSensorIcon   = (ImageView)lySensorInfo.findViewById(R.id.iv_sensor_icon);
@@ -264,22 +264,22 @@ public class SensorsFragment extends Fragment {
         int sensorIconRes = R.drawable.sensor_ant_heart;
         int sensorNameRes = R.string.sensor_hrm;
 
-        switch(model.sensorType) {
+        switch(devInfo.getType()) {
             case HRM:
                 sensorNameRes = R.string.sensor_hrm;
-                sensorIconRes = (model.radioType == RadioType.ANT) ?
+                sensorIconRes = (devInfo.getRadio()==DeviceInfo.Radio.ANT) ?
                         R.drawable.sensor_ant_heart :
                         R.drawable.sensor_ble_heart;
                 break;
             case CSC:
                 sensorNameRes = R.string.sensor_cadspd;
-                sensorIconRes = (model.radioType == RadioType.ANT) ?
+                sensorIconRes = (devInfo.getRadio()==DeviceInfo.Radio.ANT) ?
                         R.drawable.sensor_ant_cadspd :
                         R.drawable.sensor_ble_cadspd;
                 break;
             case PWR:
                 sensorNameRes = R.string.sensor_power;
-                sensorIconRes = (model.radioType == RadioType.ANT) ?
+                sensorIconRes = (devInfo.getRadio()==DeviceInfo.Radio.ANT) ?
                         R.drawable.sensor_ant_power :
                         R.drawable.sensor_ble_power;
                 break;
@@ -295,27 +295,44 @@ public class SensorsFragment extends Fragment {
 
         // 名稱/廠牌/ID
         txvSensorName.setText(sensorNameRes);
-        txvManufacturer.setText(model.manufacturer);
-        if (model.radioType==RadioType.ANT) {
+        txvManufacturer.setText(devInfo.getManufacturer());
+        if (devInfo.getRadio()==DeviceInfo.Radio.ANT) {
             // TODO: 這一段切割成 method 比較好，這裡和 Toast 都會用到
-            int idDec = Integer.parseInt(model.address, 16);
+            int idDec = Integer.parseInt(devInfo.getId(), 16);
             String antId = String.format("0x%04x (%d)", idDec, idDec);
             txvAddress.setText(antId);
         } else {
-            txvAddress.setText(model.address);
+            txvAddress.setText(devInfo.getId());
         }
 
         // 電量資訊
-        String batteryText = (model.batteryLevel<101) ? String.format("%d%%", model.batteryLevel) : "";
+        String batteryText = (devInfo.getBattery()<101) ? String.format("%d%%", devInfo.getBattery()) : "";
         txvBattery.setText(batteryText);
-        ivBatteryIcon.setImageLevel(model.batteryLevel);
+        ivBatteryIcon.setImageLevel(devInfo.getBattery());
 
         // 訊號強度資訊
         ivSignalIcon.setImageLevel(3);
 
         // 配對狀況
-        int borderRes = model.paired ? R.drawable.border_sensor_selected : R.drawable.border_sensor;
+        int borderRes = R.drawable.border_sensor;
+        if (devInfo.isPaired()) {
+            if (devInfo.isFound()) {
+                borderRes = R.drawable.border_sensor_available;
+            } else {
+                borderRes = R.drawable.border_sensor_paired;
+            }
+        }
         lySensorInfo.setBackgroundResource(borderRes);
+    }
+
+    /**
+     *
+     */
+    private void loadSensors() {
+        List<DeviceInfo> sensors = mSettings.getPairedSensors();
+        for (DeviceInfo devInfo : sensors) {
+            addSensor(devInfo);
+        }
     }
 
     /**
@@ -324,7 +341,7 @@ public class SensorsFragment extends Fragment {
     private void scanSensors() {
         // 清空感應器列表與計數
         mSensorCount = 0;
-        mScanCounter = 15;  // 掃描 15 秒
+        mScanCounter = 20;  // 掃描 15 秒
         mGlSensorPanel.removeAllViews();
 
         // 顯示等待文字
@@ -375,46 +392,41 @@ public class SensorsFragment extends Fragment {
      */
     private void selectSensor(int idx) {
         // 如果已經選過了，就忽略這個事件
-        SensorModel model = mModelList.get(idx);
+        DeviceInfo devInfo = mModelList.get(idx);
         //if (model.paired) return; // 除錯時，拿掉這行比較方便
 
         // 更新已選取裝置的視覺
-        model.paired = true;
-        updateSensor(model);
+        devInfo.setPaired(true);
+        updateSensor(devInfo);
 
         // 同類型裝置，限制只能選一個，另一個要排除
         LinearLayout view = (LinearLayout) mViewList.get(idx);
         for (int i=0;i<mModelList.size();i++) {
             if (i==idx) continue;
-            SensorModel anotherModel = mModelList.get(i);
-            if (anotherModel.sensorType==model.sensorType && anotherModel.paired) {
-                LinearLayout anotherView = (LinearLayout) mViewList.get(i);
-                anotherModel.paired = false;
-                updateSensor(anotherModel);
+            DeviceInfo anotherDevInfo = mModelList.get(i);
+            if (anotherDevInfo.getType()==devInfo.getType() && anotherDevInfo.isPaired()) {
+                anotherDevInfo.setPaired(false);
+                updateSensor(anotherDevInfo);
             }
         }
 
         // 寫入 SharedPreference
-        view.setBackgroundResource(R.drawable.border_sensor_selected);
-
-        DeviceReceiver.Radio radio = model.radioType.equals(RadioType.ANT) ?
-            DeviceReceiver.Radio.ANT :
-            DeviceReceiver.Radio.BLE;
+        view.setBackgroundResource(R.drawable.border_sensor_paired);
 
         // TODO: 提示訊息改用譯文處理
         String msg = "";
-        switch(model.sensorType) {
+        switch(devInfo.getType()) {
             case HRM:
-                mSettings.setHeartRate(model.address, radio);
-                msg = String.format("心率計 %s 已配對", model.address);
+                mSettings.setHeartRate(devInfo.getId(), devInfo.getRadio());
+                msg = String.format("心率計 %s 已配對", devInfo.getId());
                 break;
             case CSC:
-                mSettings.setSpeedCadence(model.address, radio);
-                msg = String.format("踏頻計 %s 已配對", model.address);
+                mSettings.setSpeedCadence(devInfo.getId(), devInfo.getRadio());
+                msg = String.format("踏頻計 %s 已配對", devInfo.getId());
                 break;
             case PWR:
-                mSettings.setPower(model.address, radio);
-                msg = String.format("功率計 %s 已配對", model.address);
+                mSettings.setPower(devInfo.getId(), devInfo.getRadio());
+                msg = String.format("功率計 %s 已配對", devInfo.getId());
                 break;
         }
 
@@ -463,99 +475,17 @@ public class SensorsFragment extends Fragment {
     private DeviceReceiver mDeviceReceiver = new DeviceReceiver() {
 
         @Override
-        public void onDeviceFound(Bundle devData) {
-            SensorModel model = createModel(devData);
-            if (model.sensorType!=SensorType.UNKNOWN) {
-                addSensor(model);
+        public void onDeviceFound(DeviceInfo devInfo) {
+            if (devInfo.getType()!=DeviceInfo.Type.UNKNOWN) {
+                addSensor(devInfo);
             }
         }
 
         @Override
-        public void onDeviceUpdate(Bundle devData) {
-            SensorModel model = createModel(devData);
-            if (model.sensorType!=SensorType.UNKNOWN) {
-                updateSensor(model);
+        public void onDeviceUpdate(DeviceInfo devInfo) {
+            if (devInfo.getType()!=DeviceInfo.Type.UNKNOWN) {
+                updateSensor(devInfo);
             }
-        }
-
-        /**
-         * DeviceScanner 回傳資訊轉換 UI 輸出資訊
-         *
-         * @param devData
-         * @return
-         */
-        private SensorModel createModel(Bundle devData) {
-            SensorModel model = new SensorModel();
-
-            // 通訊方式
-            int radio = devData.getInt(DeviceReceiver.KI_PROTOCOL);
-            model.radioType = (radio==Radio.ANT.ordinal()) ? RadioType.ANT : RadioType.BLE;
-
-            // 感應器 ID
-            String id = devData.getString(DeviceReceiver.KS_ID);
-            model.address = id;
-            /*
-            if (model.radioType == RadioType.ANT) {
-                int ant_id = Integer.parseInt(id, 16);
-                model.address = String.format("0x%04x (%d)", ant_id, ant_id);
-            } else {
-                model.address = id;
-            }
-            */
-
-            // 感應器名稱
-            model.name = devData.getString(DeviceReceiver.KS_NAME);
-
-            // 廠商名稱，銷售商優先，製造商其次
-            String vendor       = devData.getString(DeviceReceiver.KS_VENDOR);
-            String manufacturer = devData.getString(DeviceReceiver.KS_MANUFACTURER);
-            if (!vendor.equals("")) {
-                model.manufacturer = vendor;
-            } else {
-                model.manufacturer = manufacturer;
-            }
-
-            // 電量 (因為 level-list 不能用負數，所以無電量時改用 101)
-            model.batteryLevel = devData.getInt(DeviceReceiver.KI_BATTERY);
-            if (model.batteryLevel<0) model.batteryLevel = 101;
-
-            // 訊號強度
-            int rssi = devData.getInt(DeviceReceiver.KI_RSSI);
-            if (rssi>0) {
-                // 無訊號資訊
-                model.signalLevel = 4;
-            } else {
-                // RSSI 級距
-                // TODO: 找時間移動感應器進行修正
-                model.signalLevel = 0;
-                if (rssi>-200) model.signalLevel++;
-                if (rssi>-100) model.signalLevel++;
-                if (rssi>-60)  model.signalLevel++;
-
-                String msg = String.format("sensor:%s, rssi:%d, level=%d", model.address, rssi, model.signalLevel);
-                Log.d(TAG, msg);
-            }
-
-            // 感應器類型
-            Type type = Type.values()[devData.getInt(DeviceReceiver.KI_TYPE)];
-            switch(type) {
-                case HRM:
-                    model.sensorType = SensorType.HRM;
-                    break;
-                case SPDCAD:
-                    model.sensorType = SensorType.CSC;
-                    break;
-                case PWR:
-                    model.sensorType = SensorType.PWR;
-                    break;
-                default:
-                    model.sensorType = SensorType.UNKNOWN;
-            }
-
-            // 配對狀況
-            model.paired = mSettings.isPaired(model.address);
-
-            return model;
         }
 
     };
