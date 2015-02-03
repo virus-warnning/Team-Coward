@@ -210,24 +210,26 @@ public class PanelFragment extends Fragment {
                     updateSpeed((int)speed);
                     double distance = signal.getDouble(SignalBuilder.D_KM);
                     updateDistance(distance);
+                    //Log.d(TAG, String.format("收到速度: %.2fkm/hr 距離: %.2fkm", speed, distance));
                     break;
                 case SignalBuilder.TYPE_POSITION:
                     // 沒有感應器時，採用 GPS 速度
                     if (!mSettings.hasBikeSpeedSensor()) {
                         speed = signal.getDouble(SignalBuilder.D_KMHR);
                         updateSpeed((int)speed);
+                        //Log.d(TAG, String.format("收到 GPS 速度: %.2fkm/hr 距離: %.2fkm", speed));
                     }
                     break;
                 case SignalBuilder.TYPE_CADENCE:
                     int rpm = signal.getInt(SignalBuilder.I_RPM);
                     updateCadence(rpm);
+                    //Log.d(TAG, String.format("收到踏頻: %d", rpm));
                     break;
                 case SignalBuilder.TYPE_HEART_RATE:
                     int rate = signal.getInt(SignalBuilder.I_RATE);
                     int calories = signal.getInt(SignalBuilder.I_CALORIES);
                     updateHeartRate(rate);
                     updateCalories(calories);
-                    Log.d("Shit", String.format("已消耗卡路里 %d", calories));
                     break;
                 case SignalBuilder.TYPE_POWER:
                     // 注意!! 這個值必須在實際上路或訓練台才能試出來
@@ -243,6 +245,7 @@ public class PanelFragment extends Fragment {
                     switch(mServiceState) {
                         case STARTED:
                             wheel_level = WHEEL_STARTED;
+                            mHandler.postDelayed(mGradualTask, 100);
                             break;
                         case STARTING:
                         case STOPPING:
@@ -263,9 +266,9 @@ public class PanelFragment extends Fragment {
                     mTxvBattery.setText(levelText);
                     break;
                 case SignalBuilder.TYPE_LIGHT:
-                    int lux = signal.getInt(SignalBuilder.I_LUX);
-                    Log.d(TAG, String.format("環境亮度: %d lux", lux));
                     // TODO: 面板主題控制
+                    int lux = signal.getInt(SignalBuilder.I_LUX);
+                    //Log.d(TAG, String.format("環境亮度: %d lux", lux));
                     break;
                 case SignalBuilder.TYPE_UNKNOWN:
                     // TODO: 想想看發生時要怎麼處理
@@ -476,7 +479,6 @@ public class PanelFragment extends Fragment {
                     // 開啟運動訊息服務
                     intent.putExtra("Request", SignalService.Request.START.name());
                     getActivity().startService(intent);
-                    mHandler.postDelayed(mGradualTask, 100);
                     break;
                 case STARTED:
                     if (mLatestSpeed==0) {
