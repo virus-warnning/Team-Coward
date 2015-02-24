@@ -51,7 +51,8 @@ public class TeamCowardActivity extends Activity {
     // 好朋友特別允許使用
     private static final List<String> FACEBOOK_VIP = Arrays.asList(new String[] {
         "986315244715254", // me
-        "875472132464723"  // Smooth Tsai
+        "875472132464723", // Smooth Tsai
+        "957596700918932"  // Smooth Tsai 2
     });
 
     FrameLayout  mNaviMenu;
@@ -71,6 +72,7 @@ public class TeamCowardActivity extends Activity {
      */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        // TODO: 0.2.5 發生過 NullPointerException
         super.onActivityResult(requestCode, resultCode, data);
         Session.getActiveSession().onActivityResult(this, requestCode, resultCode, data);
     }
