@@ -62,6 +62,7 @@ public class PanelFragment extends Fragment {
     private TextView  mTxvBattery;
     private TextView  mTxvNow;
     private TextView  mTxvTemperature;
+    private TextView  mTxvShifter;
 
     // 指針
     private Bitmap mBmpPin;         // 0 度指針
@@ -141,6 +142,7 @@ public class PanelFragment extends Fragment {
         mTxvBattery     = (TextView)rootView.findViewById(R.id.txv_battery);
         mTxvNow         = (TextView)rootView.findViewById(R.id.txv_now);
         mTxvTemperature = (TextView)rootView.findViewById(R.id.txv_temperature);
+        mTxvShifter     = (TextView)rootView.findViewById(R.id.txv_shifter);
 
         //--------------------
         //    指針圖前置處理
@@ -217,6 +219,8 @@ public class PanelFragment extends Fragment {
                     if (!mSettings.hasBikeSpeedSensor()) {
                         speed = signal.getDouble(SignalBuilder.D_KMHR);
                         updateSpeed((int)speed);
+                        distance = signal.getDouble(SignalBuilder.D_KM);
+                        updateDistance(distance);
                         //Log.d(TAG, String.format("收到 GPS 速度: %.2fkm/hr 距離: %.2fkm", speed));
                     }
                     break;
@@ -269,6 +273,12 @@ public class PanelFragment extends Fragment {
                     // TODO: 面板主題控制
                     int lux = signal.getInt(SignalBuilder.I_LUX);
                     //Log.d(TAG, String.format("環境亮度: %d lux", lux));
+                    break;
+                case SignalBuilder.TYPE_SHIFTER:
+                    int front = signal.getInt(SignalBuilder.I_FRONT);
+                    int rear  = signal.getInt(SignalBuilder.I_REAR);
+                    String shifterText = String.format("%d/%d", front, rear);
+                    mTxvShifter.setText(shifterText);
                     break;
                 case SignalBuilder.TYPE_UNKNOWN:
                     // TODO: 想想看發生時要怎麼處理
