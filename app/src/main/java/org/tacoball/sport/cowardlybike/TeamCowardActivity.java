@@ -524,17 +524,22 @@ class MainPagerAdapter extends FragmentPagerAdapter {
     public void setLogined(boolean logined) {
         if (logined) {
             baseId = 0;
-            frags = new Fragment[5];
-            frags[0] = new SensorsFragment();
-            frags[1] = new SosFragment();
-            frags[2] = new PanelFragment();
-            frags[3] = new SettingsFragment();
-            frags[4] = new AboutFragment();
+
+            frags = new Fragment[] {
+                new SensorsFragment(),
+                //new SosFragment(),
+                new PanelFragment(),
+                new SettingsFragment(),
+                new AboutFragment()
+            };
+
             // TODO: 解除帳號綁定
         } else {
             baseId = 10;
-            frags = new Fragment[1];
-            frags[0] = new LoginFragment();
+
+            frags = new Fragment[] {
+                new LoginFragment(),
+            };
         }
 
         notifyDataSetChanged();
