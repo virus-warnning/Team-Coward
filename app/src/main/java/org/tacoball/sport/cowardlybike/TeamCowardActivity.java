@@ -165,7 +165,7 @@ public class TeamCowardActivity extends Activity {
 
         // 配置翻頁事件
         mPager.setOnPageChangeListener(pc);
-        mPager.setCurrentItem(2);
+        mPager.setCurrentItem(1);
     }
 
     /**
