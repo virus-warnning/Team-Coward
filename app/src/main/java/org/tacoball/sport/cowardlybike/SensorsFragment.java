@@ -326,10 +326,17 @@ public class SensorsFragment extends Fragment {
     }
 
     /**
-     *
+     * 載入已配對的感應器
      */
     private void loadSensors() {
         List<DeviceInfo> sensors = mSettings.getPairedSensors();
+
+        // 隱藏提示訊息
+        if (sensors.size()>0) {
+            mTxvPrompt.setVisibility(View.INVISIBLE);
+        }
+
+        // 列出已配對裝置
         for (DeviceInfo devInfo : sensors) {
             addSensor(devInfo);
         }
