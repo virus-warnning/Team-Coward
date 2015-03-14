@@ -10,6 +10,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.Signature;
 import android.net.ConnectivityManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v13.app.FragmentPagerAdapter;
@@ -37,6 +38,7 @@ import com.tacoball.sport.signals.Settings;
 import com.tacoball.sport.signals.Utils;
 import com.tacoball.sport.signals.hal.DeviceScanner;
 
+import java.io.File;
 import java.security.MessageDigest;
 import java.util.Arrays;
 import java.util.List;
@@ -48,12 +50,14 @@ public class TeamCowardActivity extends Activity {
 
     private static final String TAG = "TeamCowardActivity";
 
-    // 好朋友特別允許使用
+    // 金手指I - 好朋友特別允許使用
     private static final List<String> FACEBOOK_VIP = Arrays.asList(new String[] {
         "986315244715254", // me
-        "875472132464723", // Smooth Tsai
-        "957596700918932"  // Smooth Tsai 2
+        "957596700918932"  // Smooth Tsai
     });
+
+    // 金手指II
+    private static final String GFINGER_FILE = "gfinger.txt";
 
     FrameLayout  mNaviMenu;
     LinearLayout mNaviItems;
@@ -116,11 +120,15 @@ public class TeamCowardActivity extends Activity {
         if (isPassedIn12Hr()) {
             onSessionCreated();
         } else {
-            if (hasInternet()) {
-                checkFacebookMembership();
-                // TODO: 以後要增加中國用的項目
+            if (hasGoldenFingerII()) {
+                onAuthPassed("Golden Finger II");
             } else {
-                checkOffline();
+                if (hasInternet()) {
+                    checkFacebookMembership();
+                    // TODO: 以後要增加中國用的項目
+                } else {
+                    checkOffline();
+                }
             }
         }
     }
@@ -367,11 +375,15 @@ public class TeamCowardActivity extends Activity {
                                 }, 1000);
                             } else {
                                 String id = mSettings.getCustomizedString("player.auth.facebook_id");
+                                File gfinger = null;
+
                                 if (FACEBOOK_VIP.contains(id)) {
                                     Toast.makeText(TeamCowardActivity.this, "以金手指模式登入", Toast.LENGTH_LONG).show();
-                                    onAuthPassed("Facebook"); // 不屬膽小車隊，而是 VIP
+                                    onAuthPassed("Facebook");         // 不屬膽小車隊，而是 VIP
+                                } else if (gfinger!=null && gfinger.exists()) {
+                                    onAuthPassed("Golden Finger II"); // 二代金手指
                                 } else {
-                                    onAuthFailed();           // 不屬膽小車隊，也不是 VIP
+                                    onAuthFailed();                   // 不屬膽小車隊，也不是 VIP
                                 }
                             }
                         }
@@ -415,6 +427,28 @@ public class TeamCowardActivity extends Activity {
             // 尚未連線驗證
             onAuthFailed();
         }
+    }
+
+    private boolean hasGoldenFingerII() {
+        if (Build.VERSION.SDK_INT>=Build.VERSION_CODES.KITKAT) {
+            File extDir = null;
+            File[] dirs = getExternalFilesDirs("magic");
+            for (int i=dirs.length-1; i>=0; i--) {
+                if (dirs[i]!=null) {
+                    extDir = dirs[i]; break;
+                }
+            }
+
+            if (extDir!=null) {
+                File gf = new File(extDir, GFINGER_FILE);
+                if (gf.exists()) {
+                    Toast.makeText(this, "發現金手指檔案", Toast.LENGTH_LONG).show();
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     /**
