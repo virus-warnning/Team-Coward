@@ -289,13 +289,21 @@ public class SensorsFragment extends Fragment {
         ivSensorIcon.setImageResource(sensorIconRes);
 
         // 這寫法會出現看不懂的感應器名稱，還是別用好了
-        // *  BLE: HRM
+        // * BLE: HRM
         // * ANT+: Device:1105
         //txvSensorName.setText(model.name);
 
-        // 名稱/廠牌/ID
+        // 名稱
         txvSensorName.setText(sensorNameRes);
-        txvManufacturer.setText(devInfo.getManufacturer());
+
+        // 廠牌 (字首轉大寫)
+        String manu = devInfo.getManufacturer();
+        if (manu.length()>1) {
+            manu = manu.substring(0,1).toUpperCase() + manu.substring(1);
+        }
+        txvManufacturer.setText(manu);
+
+        // ID
         if (devInfo.getRadio()==DeviceInfo.Radio.ANT) {
             // TODO: 這一段切割成 method 比較好，這裡和 Toast 都會用到
             int idDec = Integer.parseInt(devInfo.getId(), 16);
@@ -348,7 +356,7 @@ public class SensorsFragment extends Fragment {
     private void scanSensors() {
         // 清空感應器列表與計數
         mSensorCount = 0;
-        mScanCounter = 20;  // 掃描 15 秒
+        mScanCounter = 15;  // 掃描 15 秒
         mGlSensorPanel.removeAllViews();
 
         // 顯示等待文字
