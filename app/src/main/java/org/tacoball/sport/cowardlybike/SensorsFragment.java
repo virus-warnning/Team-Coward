@@ -54,12 +54,6 @@ public class SensorsFragment extends Fragment {
     private List<View> mViewList = new ArrayList<View>();
     private List<DeviceInfo> mModelList = new ArrayList<DeviceInfo>();
 
-    // 模擬掃描功能設定
-    // TODO: 之後需要搬到 SportSignal Core
-    private static final boolean ENABLE_MOCK_DATA = false;
-    private static final int MOCK_SENSORS_TOTAL = 6;
-    private static final DeviceInfo[] mMockSensors = new DeviceInfo[MOCK_SENSORS_TOTAL];
-
     /**
      * 啟動配置
      *
@@ -88,26 +82,9 @@ public class SensorsFragment extends Fragment {
         mGlSensorPanel = (GridLayout)rootView.findViewById(R.id.sensor_panel);
         mGlSensorPanel.removeAllViews();
 
-        // 使用模擬模式時，產生模擬資料
-        if (ENABLE_MOCK_DATA) {
-            for (int i=0;i<6;i++) {
-                String           id    = (i%2==0) ? "0x3dac (15788)" : "01:23:45:67:89:ab";
-                DeviceInfo.Radio radio = (i%2==0) ? DeviceInfo.Radio.ANT : DeviceInfo.Radio.BLE;
-                DeviceInfo.Type  type  = DeviceInfo.Type.UNKNOWN;
-                switch (i%3) {
-                    case 0: type = DeviceInfo.Type.HRM; break;
-                    case 1: type = DeviceInfo.Type.CSC; break;
-                    case 2: type = DeviceInfo.Type.PWR; break;
-                }
-
-                mMockSensors[i] = new DeviceInfo(id, radio, type);
-                mMockSensors[i].setManufacturer((i%2==0) ? "Karnim" : "Tacoball Studio");
-                mMockSensors[i].setBattery(100-i*15);
-            }
-        } else {
-            mDeviceScanner = new DeviceScanner(getActivity());
-            mDeviceScanner.setDeviceScanReceiver(mDeviceReceiver);
-        }
+        // 配置裝置掃瞄器
+        mDeviceScanner = new DeviceScanner(getActivity());
+        mDeviceScanner.setDeviceScanReceiver(mDeviceReceiver);
 
         // 這一整段可能獨立出去比較好維護，與前面程式無相關性
         final SharedPreferences pref = getActivity().getSharedPreferences("DEFAULT", Context.MODE_PRIVATE);
@@ -144,26 +121,22 @@ public class SensorsFragment extends Fragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.d(TAG, "onDestroy()");
-        mHandler.removeCallbacksAndMessages(null);
-
-        if (!ENABLE_MOCK_DATA) {
-            mDeviceScanner.close();
-            mDeviceScanner = null;
-        }
+        mDeviceScanner.close();
+        mDeviceScanner = null;
+        // Log.d(TAG, "onDestroy()");
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        Log.d(TAG, "onPause()");
-        if (!ENABLE_MOCK_DATA) {
-            mDeviceScanner.stopScan();
-        }
+        mDeviceScanner.stopScan();
+        // Log.d(TAG, "onPause()");
     }
 
     /**
      * 跳出提示訊息
+     *
+     * TODO: 防止在碼錶頁跳出
      */
     private void popGuide(View vGuide) {
         final SharedPreferences pref = getActivity().getSharedPreferences("DEFAULT", Context.MODE_PRIVATE);
@@ -227,7 +200,7 @@ public class SensorsFragment extends Fragment {
         lp.bottomMargin = 2;
         mGlSensorPanel.addView(ly_sensorInfo, lp);
 
-        //
+        // 第一個感應器，有時候會更新失敗，需要稍微延遲一下下
         final DeviceInfo devInfoF = devInfo;
         mHandler.postDelayed(new Runnable() {
             @Override
@@ -371,35 +344,9 @@ public class SensorsFragment extends Fragment {
         // 隱藏提示訊息
         mTxvPrompt.setVisibility(View.INVISIBLE);
 
-        if (ENABLE_MOCK_DATA) {
-            // 假資料掃描 (介面測試用)
-            mHandler.post(mMockDataTask);
-        } else {
-            // 真實掃描
-            mDeviceScanner.startScan();
-        }
-
-        // 倒數計時
-        Runnable waiting = new Runnable() {
-            @Override
-            public void run() {
-                mScanCounter--;
-                if (mScanCounter==0) {
-                    // 時間到 (真實掃描需要停止硬體控制)
-                    mBtScan.setVisibility(View.VISIBLE);
-                    mTxvScanning.setVisibility(View.INVISIBLE);
-                    if (!ENABLE_MOCK_DATA) {
-                        mDeviceScanner.stopScan();
-                    }
-                } else {
-                    // 時間還沒到
-                    String msg = String.format(tpl, mScanCounter);
-                    mTxvScanning.setText(msg);
-                    mHandler.postDelayed(this, 1000);
-                }
-            }
-        };
-        mHandler.postDelayed(waiting, 1000);
+        // 開始掃描
+        mDeviceScanner.startScan();
+        mHandler.postDelayed(mWaiting, 1000);
     }
 
     /**
@@ -451,23 +398,6 @@ public class SensorsFragment extends Fragment {
         mSettings.dump();
     }
 
-    // 產生模擬掃描資料
-    private Runnable mMockDataTask = new Runnable() {
-
-        @Override
-        public void run() {
-            addSensor(mMockSensors[mSensorCount]);
-            mSensorCount++;
-
-            if (mSensorCount<MOCK_SENSORS_TOTAL) {
-                mHandler.postDelayed(mMockDataTask, 200);
-            } else {
-                // TODO: 顯示烤吐司提示配對結果摘要
-            }
-        }
-
-    };
-
     // Click 處理
     private View.OnClickListener mOnClick = new View.OnClickListener() {
 
@@ -503,6 +433,26 @@ public class SensorsFragment extends Fragment {
             }
         }
 
+    };
+
+    // 倒數計時
+    Runnable mWaiting = new Runnable() {
+        @Override
+        public void run() {
+            mScanCounter--;
+            if (mScanCounter==0) {
+                // 時間到 (真實掃描需要停止硬體控制)
+                mBtScan.setVisibility(View.VISIBLE);
+                mTxvScanning.setVisibility(View.INVISIBLE);
+                mDeviceScanner.stopScan();
+            } else {
+                // 時間還沒到
+                String tpl = getActivity().getResources().getString(R.string.scanning);
+                String msg = String.format(tpl, mScanCounter);
+                mTxvScanning.setText(msg);
+                mHandler.postDelayed(this, 1000);
+            }
+        }
     };
 
 }

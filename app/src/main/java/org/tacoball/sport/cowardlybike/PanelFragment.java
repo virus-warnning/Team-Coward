@@ -70,7 +70,8 @@ public class PanelFragment extends Fragment {
     private Bitmap mBmpCadencePin;  // 踏頻指針
     private Bitmap mBmpCaloriesPin; // 卡路里指針
 
-    // 執行緒管理器
+    // 排程管理 (用於指針動畫與時鐘)
+    // 注意!! 不可以清除時鐘的排程，否則時鐘會失效
     private Handler mHandler = Utils.getSharedHandler();
 
     // 實際速度值
@@ -495,7 +496,7 @@ public class PanelFragment extends Fragment {
                         // 關閉運動訊息服務
                         intent.putExtra("Request", SignalService.Request.STOP.name());
                         getActivity().startService(intent);
-                        mHandler.removeCallbacksAndMessages(null);
+                        mHandler.removeCallbacks(mGradualTask);
                     }
                     break;
             }
