@@ -123,6 +123,9 @@ public class SensorsFragment extends Fragment {
         super.onDestroy();
         mDeviceScanner.close();
         mDeviceScanner = null;
+
+        // 假如掃描中就關閉程式，可能會殘留倒數計時排程以及更新裝置排程
+        mHandler.removeCallbacks(mWaiting);
         // Log.d(TAG, "onDestroy()");
     }
 
@@ -201,6 +204,7 @@ public class SensorsFragment extends Fragment {
         mGlSensorPanel.addView(ly_sensorInfo, lp);
 
         // 第一個感應器，有時候會更新失敗，需要稍微延遲一下下
+        // TODO: 如果掃描中就關閉應用程式，這裡可能有 NullPointerException 的風險
         final DeviceInfo devInfoF = devInfo;
         mHandler.postDelayed(new Runnable() {
             @Override
