@@ -29,15 +29,16 @@
                 android:layout_height="85dp"
                 android:textAppearance="?android:attr/textAppearanceLarge"
                 android:width="100dp"
-                android:height="85dp" />
+                android:height="85dp"
+                android:id="@+id/blank_left" />
 
             <TextView
                 android:layout_width="100dp"
                 android:layout_height="85dp"
                 android:textAppearance="?android:attr/textAppearanceLarge"
                 android:gravity="center_horizontal"
-                android:text="感應器"
-                android:drawableTop="@drawable/logo"
+                android:text="@string/sensor"
+                android:drawableTop="@drawable/csc96"
                 android:id="@+id/tx2"
                 android:textColor="@color/light_text" />
 
@@ -58,7 +59,7 @@
                 android:layout_height="85dp"
                 android:textAppearance="?android:attr/textAppearanceLarge"
                 android:gravity="center_horizontal"
-                android:text="碼表"
+                android:text="@string/panel"
                 android:drawableTop="@drawable/logo"
                 android:id="@+id/tx1"
                 android:textColor="@color/light_text" />
@@ -68,18 +69,19 @@
                 android:layout_height="85dp"
                 android:textAppearance="?android:attr/textAppearanceLarge"
                 android:gravity="center_horizontal"
-                android:text="設定"
-                android:drawableTop="@drawable/logo"
+                android:text="@string/setting"
+                android:drawableTop="@drawable/settings96"
                 android:id="@+id/tx3"
-                android:textColor="@color/light_text" />
+                android:textColor="@color/light_text"
+                android:singleLine="false" />
 
             <TextView
                 android:layout_width="100dp"
                 android:layout_height="85dp"
                 android:textAppearance="?android:attr/textAppearanceLarge"
                 android:gravity="center_horizontal"
-                android:text="關於"
-                android:drawableTop="@drawable/logo"
+                android:text="@string/about"
+                android:drawableTop="@drawable/about96"
                 android:id="@+id/tx5"
                 android:textColor="@color/light_text" />
 
@@ -87,7 +89,8 @@
                 android:layout_width="100dp"
                 android:layout_height="85dp"
                 android:textAppearance="?android:attr/textAppearanceLarge"
-                android:gravity="center_horizontal" />
+                android:gravity="center_horizontal"
+                android:id="@+id/blank_right" />
         </LinearLayout>
 
     </FrameLayout>

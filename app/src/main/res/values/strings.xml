@@ -3,6 +3,10 @@
 
     <string name="app_name">Team Coward</string>
     <string name="facebook_app_id">397783553703639</string>
+    <string name="sensor">Sensor</string>
+    <string name="panel">Panel</string>
+    <string name="setting">Setting</string>
+    <string name="about">About</string>
 
     <!-- 感應器 -->
     <string name="sensor_hrm">HRM</string>

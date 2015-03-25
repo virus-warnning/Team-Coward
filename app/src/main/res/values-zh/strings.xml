@@ -3,6 +3,10 @@
 
     <string name="app_name">膽小車隊</string>
     <string name="facebook_app_id">397783553703639</string>
+    <string name="sensor">感應器</string>
+    <string name="panel">時速表</string>
+    <string name="setting">設定</string>
+    <string name="about">關於</string>
 
     <!-- 感應器 -->
     <string name="sensor_hrm">心率計</string>
