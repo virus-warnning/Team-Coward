@@ -13,6 +13,7 @@
 
     <!-- 掃描動作 -->
     <string name="scan">Scan</string>
+    <string name="dismiss">Dismiss</string>
     <string name="scanning">Wait %s seconds ...</string>
     <string name="click_to_scan">Click scan button to find sensors.</string>
     <string name="incompatible_hint">Oops! This phone is not compatible with any sensor.</string>
@@ -22,6 +23,7 @@
     <string name="scan_guide_msg2">The kind(s) of sensors can be scanned and paired here.</string>
     <string name="scan_guide_skip">Never tell me again.</string>
     <string name="scan_guide_isee">I see!</string>
+    <string name="scan_firmware">Firmware</string>
 
     <!-- 設定 -->
     <string name="personal">Personal Info</string>

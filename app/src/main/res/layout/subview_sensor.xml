@@ -13,7 +13,7 @@
             android:layout_width="60dp"
             android:layout_height="60dp"
             android:id="@+id/iv_sensor_icon"
-            android:src="@drawable/sensor_ble_heart"
+            android:src="@drawable/sensor_ble_cadspd"
             android:contentDescription="@string/mock_content_desc" />
 
     </RelativeLayout>
@@ -33,7 +33,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_alignParentLeft="true"
-                android:text="@string/sensor_power"
+                android:text="@string/sensor_cadspd"
                 android:id="@+id/txv_sensor_name" />
 
             <ImageView
@@ -68,14 +68,32 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="20dp"
-            android:text="@string/mock_content_desc"
+            android:text="@string/mock_manufacturer"
             android:id="@+id/txv_manufacturer" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="20dp"
-            android:text="@string/mock_address"
-            android:id="@+id/txv_sensor_addr" />
+        <RelativeLayout
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="20dp"
+                android:text="@string/mock_address"
+                android:id="@+id/txv_sensor_addr"
+                android:layout_alignParentStart="false"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentTop="true" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/mock_version"
+                android:id="@+id/txv_sensor_firmware"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentRight="true" />
+
+        </RelativeLayout>
 
     </LinearLayout>
 

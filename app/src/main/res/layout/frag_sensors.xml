@@ -109,7 +109,17 @@
             android:id="@+id/txv_scanning"
             android:layout_centerInParent="true"
             android:textColor="#ffffff"
-            android:textSize="9pt" />
+            android:textSize="9pt"
+            android:visibility="invisible" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/dismiss"
+            android:id="@+id/btn_dismiss"
+            android:layout_alignParentBottom="false"
+            android:layout_centerVertical="true"
+            android:layout_alignParentRight="true" />
     </RelativeLayout>
 
 </LinearLayout>

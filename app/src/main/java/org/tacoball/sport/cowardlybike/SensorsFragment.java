@@ -37,6 +37,7 @@ public class SensorsFragment extends Fragment {
     private static final String TAG = "SensorsFragment";
 
     Button mBtScan;
+    Button mBtDismiss;
     TextView mTxvScanning;
     TextView mTxvPrompt;
     TextView mTxvIncompatible;
@@ -72,6 +73,9 @@ public class SensorsFragment extends Fragment {
 
         mBtScan = (Button)rootView.findViewById(R.id.btn_scan);
         mBtScan.setOnClickListener(mOnClick);
+
+        mBtDismiss = (Button)rootView.findViewById(R.id.btn_dismiss);
+        mBtDismiss.setOnClickListener(mOnClick);
 
         mTxvScanning = (TextView)rootView.findViewById(R.id.txv_scanning);
         mTxvScanning.setVisibility(View.INVISIBLE);
@@ -237,6 +241,7 @@ public class SensorsFragment extends Fragment {
         TextView txvManufacturer = (TextView)lySensorInfo.findViewById(R.id.txv_manufacturer);
         TextView txvAddress      = (TextView)lySensorInfo.findViewById(R.id.txv_sensor_addr);
         TextView txvBattery      = (TextView)lySensorInfo.findViewById(R.id.txv_battery);
+        TextView txvFirmware     = (TextView)lySensorInfo.findViewById(R.id.txv_sensor_firmware);
 
         int sensorIconRes = R.drawable.sensor_ant_heart;
         int sensorNameRes = R.string.sensor_hrm;
@@ -270,8 +275,26 @@ public class SensorsFragment extends Fragment {
         // * ANT+: Device:1105
         //txvSensorName.setText(model.name);
 
-        // 名稱
+        // 預設名稱
         txvSensorName.setText(sensorNameRes);
+
+        // BLE 名稱
+        /*
+        if (devInfo.getRadio()==DeviceInfo.Radio.BLE) {
+            if (!devInfo.getName().equals("")) {
+                txvSensorName.setText(devInfo.getName());
+            }
+        }
+        */
+
+        // 海綿體
+        String label = getActivity().getString(R.string.scan_firmware);
+        String rev   = devInfo.getFirmwareVer();
+        if (!rev.equals("")) {
+            txvFirmware.setText(String.format("%s: %s", label, rev));
+        } else {
+            txvFirmware.setText(String.format(""));
+        }
 
         // 廠牌 (字首轉大寫)
         String manu = devInfo.getManufacturer();
@@ -344,6 +367,7 @@ public class SensorsFragment extends Fragment {
 
         // 隱藏掃描按鈕
         mBtScan.setVisibility(View.INVISIBLE);
+        mBtDismiss.setVisibility(View.INVISIBLE);
 
         // 隱藏提示訊息
         mTxvPrompt.setVisibility(View.INVISIBLE);
@@ -399,7 +423,16 @@ public class SensorsFragment extends Fragment {
         Toast.makeText(getActivity(), msg, Toast.LENGTH_SHORT).show();
 
         // 除錯用，顯示偏好設定於 logcat
-        mSettings.dump();
+        //mSettings.dump();
+    }
+
+    // 解除配對
+    private void dismissSensors() {
+        mGlSensorPanel.removeAllViews();
+        mSettings.resetSensors();
+
+        // 除錯用，顯示偏好設定於 logcat
+        //mSettings.dump();
     }
 
     // Click 處理
@@ -409,6 +442,11 @@ public class SensorsFragment extends Fragment {
         public void onClick(View view) {
             if (view==mBtScan) {
                 scanSensors();
+                return;
+            }
+
+            if (view==mBtDismiss) {
+                dismissSensors();
                 return;
             }
 
@@ -447,6 +485,7 @@ public class SensorsFragment extends Fragment {
             if (mScanCounter==0) {
                 // 時間到 (真實掃描需要停止硬體控制)
                 mBtScan.setVisibility(View.VISIBLE);
+                mBtDismiss.setVisibility(View.VISIBLE);
                 mTxvScanning.setVisibility(View.INVISIBLE);
                 mDeviceScanner.stopScan();
             } else {
