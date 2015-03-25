@@ -241,7 +241,7 @@ public class PanelFragment extends Fragment {
                     double watt = signal.getDouble(SignalBuilder.D_WATT);
                     updatePower((int)watt);
                     break;
-                case SignalBuilder.TYPE_STATE:
+                case SignalBuilder.TYPE_SERVICE:
                     // 關閉狀態時，小圖換成開始鈕
                     String stateName = signal.getString(SignalBuilder.S_STATE);
                     mServiceState = SignalService.State.valueOf(stateName);
@@ -280,6 +280,8 @@ public class PanelFragment extends Fragment {
                     int rear  = signal.getInt(SignalBuilder.I_REAR);
                     String shifterText = String.format("%d/%d", front, rear);
                     mTxvShifter.setText(shifterText);
+                    break;
+                case SignalBuilder.TYPE_SENSOR:
                     break;
                 case SignalBuilder.TYPE_UNKNOWN:
                     // TODO: 想想看發生時要怎麼處理
