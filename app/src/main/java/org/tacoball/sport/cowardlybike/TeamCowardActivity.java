@@ -34,6 +34,7 @@ import com.facebook.Response;
 import com.facebook.Session;
 import com.facebook.SessionState;
 import com.facebook.model.GraphObject;
+import com.tacoball.sport.signals.FeedbackDb;
 import com.tacoball.sport.signals.Settings;
 import com.tacoball.sport.signals.Utils;
 import com.tacoball.sport.signals.hal.DeviceScanner;
@@ -47,6 +48,8 @@ import java.util.List;
  * 車錶 Activity
  */
 public class TeamCowardActivity extends Activity {
+
+    public static final int RESULT_SCANNER_ENABLE_BT = 999;
 
     private static final String TAG = "TeamCowardActivity";
 
@@ -65,7 +68,23 @@ public class TeamCowardActivity extends Activity {
     Handler mHandler = Utils.getSharedHandler();
     ViewPager mPager;
     Settings mSettings;
-    MainPagerAdapter mPagerAdapter = new MainPagerAdapter(getFragmentManager());
+
+    //
+    private SensorsFragment  mSensorsFragment  = new SensorsFragment();
+    private SosFragment      mSosFragment      = new SosFragment();
+    private PanelFragment    mPanelFragment    = new PanelFragment();
+    private SettingsFragment mSettingsFragment = new SettingsFragment();
+    private AboutFragment    mAboutFragment    = new AboutFragment();
+
+    private Fragment[] mFragments = new Fragment[] {
+        mSensorsFragment,
+        //mSosFragment,
+        mPanelFragment,
+        mSettingsFragment,
+        mAboutFragment
+    };
+
+    MainPagerAdapter mPagerAdapter = new MainPagerAdapter(getFragmentManager(), mFragments);
 
     /**
      * 抄來的，我也不知道這是三小，反正 FB 登入要用到
@@ -76,9 +95,15 @@ public class TeamCowardActivity extends Activity {
      */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case RESULT_SCANNER_ENABLE_BT:
+                Log.d(TAG, "Bluetooth Enabled");
+                mSensorsFragment.scanSensors();
+                break;
+        }
         // TODO: 0.2.5 發生過 NullPointerException
-        super.onActivityResult(requestCode, resultCode, data);
-        Session.getActiveSession().onActivityResult(this, requestCode, resultCode, data);
+        //super.onActivityResult(requestCode, resultCode, data);
+        //Session.getActiveSession().onActivityResult(this, requestCode, resultCode, data);
     }
 
     /**
@@ -90,6 +115,10 @@ public class TeamCowardActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_pager);
+
+        FeedbackDb.init(this);
+        FeedbackDb.debug();
+        FeedbackDb.tee();
 
         // 檢查是否已驗證身分
         // - 是否已驗證 (true/false)
@@ -528,21 +557,25 @@ public class TeamCowardActivity extends Activity {
 class MainPagerAdapter extends FragmentPagerAdapter {
 
     int baseId;
-    Fragment[] frags;
+    Fragment[] mFrags;
+    Fragment[] mFragsApp;
+    Fragment[] mFragsAuth;
 
-    public MainPagerAdapter(FragmentManager fm) {
+    public MainPagerAdapter(FragmentManager fm, Fragment[] frags) {
         super(fm);
+        mFragsApp  = frags;
+        mFragsAuth = new Fragment[] {new LoginFragment()};
         setLogined(false);
     }
 
     @Override
     public Fragment getItem(int i) {
-        return frags[i];
+        return mFrags[i];
     }
 
     @Override
     public int getCount() {
-        return frags.length;
+        return mFrags.length;
     }
 
     @Override
@@ -558,22 +591,22 @@ class MainPagerAdapter extends FragmentPagerAdapter {
     public void setLogined(boolean logined) {
         if (logined) {
             baseId = 0;
+            mFrags = mFragsApp;
 
-            frags = new Fragment[] {
+            /*
+            mFrags = new Fragment[] {
                 new SensorsFragment(),
                 //new SosFragment(),
                 new PanelFragment(),
                 new SettingsFragment(),
                 new AboutFragment()
             };
+            */
 
             // TODO: 解除帳號綁定
         } else {
             baseId = 10;
-
-            frags = new Fragment[] {
-                new LoginFragment(),
-            };
+            mFrags = mFragsAuth;
         }
 
         notifyDataSetChanged();

@@ -1,8 +1,11 @@
 package org.tacoball.sport.cowardlybike;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Fragment;
+import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
@@ -22,6 +25,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.tacoball.sport.signals.Settings;
+import com.tacoball.sport.signals.Utils;
 import com.tacoball.sport.signals.hal.DeviceInfo;
 import com.tacoball.sport.signals.hal.DeviceReceiver;
 import com.tacoball.sport.signals.hal.DeviceScanner;
@@ -352,8 +356,10 @@ public class SensorsFragment extends Fragment {
 
     /**
      * 掃描感應器
+     * - 如果藍牙已開啟，從內部呼叫
+     * - 如果藍牙未開啟，等開啟後從 Activity 呼叫
      */
-    private void scanSensors() {
+    public void scanSensors() {
         // 清空感應器列表與計數
         mSensorCount = 0;
         mScanCounter = 15;  // 掃描 15 秒
@@ -441,7 +447,15 @@ public class SensorsFragment extends Fragment {
         @Override
         public void onClick(View view) {
             if (view==mBtScan) {
-                scanSensors();
+                Activity activity = getActivity();
+                if (Utils.hasBleFeature(activity) && !Utils.isBluetoothOpened(activity)) {
+                    //
+                    Intent intentBluetooth = new Intent();
+                    intentBluetooth.setAction(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                    activity.startActivityForResult(intentBluetooth, TeamCowardActivity.RESULT_SCANNER_ENABLE_BT);
+                } else {
+                    scanSensors();
+                }
                 return;
             }
 

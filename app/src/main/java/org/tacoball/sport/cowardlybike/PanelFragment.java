@@ -19,6 +19,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.tacoball.sport.signals.Settings;
 import com.tacoball.sport.signals.SignalBuilder;
@@ -75,7 +76,7 @@ public class PanelFragment extends Fragment {
     private Handler mHandler = Utils.getSharedHandler();
 
     // 實際速度值
-    private int mLatestSpeed = 0;
+    private int mLatestSpeed   = 0;
     private int mLatestCadence = 0;
 
     // 漸變速度/踏頻
@@ -98,7 +99,7 @@ public class PanelFragment extends Fragment {
 
     // 貓貓的三種狀態
     // drawable/cat_status.xml
-    private static final int CAT_STOP = 0;
+    private static final int CAT_STOP     = 0;
     private static final int CAT_RUN_SLOW = 1;
     private static final int CAT_RUN_FAST = 2;
 
@@ -199,6 +200,7 @@ public class PanelFragment extends Fragment {
 
     /**
      * 廣播接收器，解讀運動訊息
+     * (這一段搬到 Core 處理，並且設計 interface 進行 update 動作)
      */
     private BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
 
@@ -281,7 +283,8 @@ public class PanelFragment extends Fragment {
                     String shifterText = String.format("%d/%d", front, rear);
                     mTxvShifter.setText(shifterText);
                     break;
-                case SignalBuilder.TYPE_SENSOR:
+                case SignalBuilder.TYPE_SENSOR_ERROR:
+                    Toast.makeText(getActivity(), "藍牙感應器發生錯誤，請關閉藍牙再重開", Toast.LENGTH_SHORT).show();
                     break;
                 case SignalBuilder.TYPE_UNKNOWN:
                     // TODO: 想想看發生時要怎麼處理
