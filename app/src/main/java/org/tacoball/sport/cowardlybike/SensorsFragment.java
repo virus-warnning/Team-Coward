@@ -120,9 +120,6 @@ public class SensorsFragment extends Fragment {
 
         loadSensors();
 
-        // 測試用，強制移除所有配對裝置
-        //mSettings.reset();
-
         return rootView;
     }
 
@@ -140,7 +137,6 @@ public class SensorsFragment extends Fragment {
     @Override
     public void onPause() {
         super.onPause();
-        mDeviceScanner.stopScan();
         // Log.d(TAG, "onPause()");
     }
 
@@ -297,7 +293,7 @@ public class SensorsFragment extends Fragment {
         if (!rev.equals("")) {
             txvFirmware.setText(String.format("%s: %s", label, rev));
         } else {
-            txvFirmware.setText(String.format(""));
+            txvFirmware.setText("");
         }
 
         // 廠牌 (字首轉大寫)
@@ -379,7 +375,7 @@ public class SensorsFragment extends Fragment {
         mTxvPrompt.setVisibility(View.INVISIBLE);
 
         // 開始掃描
-        mDeviceScanner.startScan();
+        mDeviceScanner.startScan(15);
         mHandler.postDelayed(mWaiting, 1000);
     }
 
@@ -449,7 +445,7 @@ public class SensorsFragment extends Fragment {
             if (view==mBtScan) {
                 Activity activity = getActivity();
                 if (Utils.hasBleFeature(activity) && !Utils.isBluetoothOpened(activity)) {
-                    //
+                    // 請求用戶開啟藍芽
                     Intent intentBluetooth = new Intent();
                     intentBluetooth.setAction(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                     activity.startActivityForResult(intentBluetooth, TeamCowardActivity.RESULT_SCANNER_ENABLE_BT);
@@ -501,7 +497,6 @@ public class SensorsFragment extends Fragment {
                 mBtScan.setVisibility(View.VISIBLE);
                 mBtDismiss.setVisibility(View.VISIBLE);
                 mTxvScanning.setVisibility(View.INVISIBLE);
-                mDeviceScanner.stopScan();
             } else {
                 // 時間還沒到
                 String tpl = getActivity().getResources().getString(R.string.scanning);

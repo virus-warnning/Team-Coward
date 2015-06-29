@@ -1,10 +1,7 @@
 package org.tacoball.sport.cowardlybike;
 
 import android.app.Fragment;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -22,9 +19,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.tacoball.sport.signals.Settings;
-import com.tacoball.sport.signals.SignalBuilder;
+import com.tacoball.sport.signals.SignalReceiver;
 import com.tacoball.sport.signals.SignalService;
+import com.tacoball.sport.signals.SignalUpdater;
 import com.tacoball.sport.signals.Utils;
+import com.tacoball.sport.signals.hal.DeviceInfo;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -62,8 +61,6 @@ public class PanelFragment extends Fragment {
     private TextView  mTxvPower;
     private TextView  mTxvBattery;
     private TextView  mTxvNow;
-    private TextView  mTxvTemperature;
-    private TextView  mTxvShifter;
 
     // 指針
     private Bitmap mBmpPin;         // 0 度指針
@@ -76,8 +73,8 @@ public class PanelFragment extends Fragment {
     private Handler mHandler = Utils.getSharedHandler();
 
     // 實際速度值
-    private int mLatestSpeed   = 0;
-    private int mLatestCadence = 0;
+    private int mLatestSpeed   = 1;
+    private int mLatestCadence = 1;
 
     // 漸變速度/踏頻
     private List<Float> mGradualSpeed = new LinkedList<Float>();
@@ -85,6 +82,7 @@ public class PanelFragment extends Fragment {
 
     // 訊號服務的工作狀態
     private SignalService.State mServiceState;
+    private SignalReceiver      mSignalReceiver;
 
     // 設定值
     private Settings mSettings;
@@ -143,8 +141,6 @@ public class PanelFragment extends Fragment {
         mTxvPower       = (TextView)rootView.findViewById(R.id.txv_power);
         mTxvBattery     = (TextView)rootView.findViewById(R.id.txv_battery);
         mTxvNow         = (TextView)rootView.findViewById(R.id.txv_now);
-        mTxvTemperature = (TextView)rootView.findViewById(R.id.txv_temperature);
-        mTxvShifter     = (TextView)rootView.findViewById(R.id.txv_shifter);
 
         //--------------------
         //    指針圖前置處理
@@ -170,11 +166,11 @@ public class PanelFragment extends Fragment {
         mSettings = new Settings(getActivity());
 
         // 開啟運動訊息接收端
-        IntentFilter filter = new IntentFilter(SignalService.ACTION);
-        getActivity().registerReceiver(mBroadcastReceiver, filter);
+        mSignalReceiver = new SignalReceiver(getActivity(), mSignalUpdater);
 
         // 儀表初始化
-        zeroize();
+        mGradualTask.run();
+        mSignalUpdater.zeroize();
 
         // 取得服務狀態
         Intent intent = new Intent(getActivity(), SignalService.class);
@@ -195,104 +191,8 @@ public class PanelFragment extends Fragment {
         super.onDestroyView();
 
         // 關閉運動訊息接收端
-        getActivity().unregisterReceiver(mBroadcastReceiver);
+        mSignalReceiver.close();
     }
-
-    /**
-     * 廣播接收器，解讀運動訊息
-     * (這一段搬到 Core 處理，並且設計 interface 進行 update 動作)
-     */
-    private BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
-
-        @Override
-        public void onReceive(Context service, Intent intent) {
-            Bundle signal = intent.getBundleExtra("SIGNAL");
-            int    type   = signal.getInt(SignalBuilder.I_TYPE, SignalBuilder.TYPE_UNKNOWN);
-
-            switch(type) {
-                case SignalBuilder.TYPE_SPEED:
-                    double speed = signal.getDouble(SignalBuilder.D_KMHR);
-                    updateSpeed((int)speed);
-                    double distance = signal.getDouble(SignalBuilder.D_KM);
-                    updateDistance(distance);
-                    //Log.d(TAG, String.format("收到速度: %.2fkm/hr 距離: %.2fkm", speed, distance));
-                    break;
-                case SignalBuilder.TYPE_POSITION:
-                    // 沒有感應器時，採用 GPS 速度
-                    if (!mSettings.hasBikeSpeedSensor()) {
-                        speed = signal.getDouble(SignalBuilder.D_KMHR);
-                        updateSpeed((int)speed);
-                        distance = signal.getDouble(SignalBuilder.D_KM);
-                        updateDistance(distance);
-                        //Log.d(TAG, String.format("收到 GPS 速度: %.2fkm/hr 距離: %.2fkm", speed));
-                    }
-                    break;
-                case SignalBuilder.TYPE_CADENCE:
-                    int rpm = signal.getInt(SignalBuilder.I_RPM);
-                    updateCadence(rpm);
-                    //Log.d(TAG, String.format("收到踏頻: %d", rpm));
-                    break;
-                case SignalBuilder.TYPE_HEART_RATE:
-                    int rate = signal.getInt(SignalBuilder.I_RATE);
-                    int calories = signal.getInt(SignalBuilder.I_CALORIES);
-                    updateHeartRate(rate);
-                    updateCalories(calories);
-                    break;
-                case SignalBuilder.TYPE_POWER:
-                    // 注意!! 這個值必須在實際上路或訓練台才能試出來
-                    double watt = signal.getDouble(SignalBuilder.D_WATT);
-                    updatePower((int)watt);
-                    break;
-                case SignalBuilder.TYPE_SERVICE:
-                    // 關閉狀態時，小圖換成開始鈕
-                    String stateName = signal.getString(SignalBuilder.S_STATE);
-                    mServiceState = SignalService.State.valueOf(stateName);
-                    // TODO: 這裡最好改成 updateStatus() 降低複雜度
-                    int wheel_level = WHEEL_STOPPED;
-                    switch(mServiceState) {
-                        case STARTED:
-                            wheel_level = WHEEL_STARTED;
-                            mHandler.postDelayed(mGradualTask, 100);
-                            break;
-                        case STARTING:
-                        case STOPPING:
-                            wheel_level = WHEEL_LOADING;
-                            break;
-                    }
-                    mIvWheel.setImageLevel(wheel_level);
-                    break;
-                case SignalBuilder.TYPE_TEMPERATURE:
-                    // !! 如果溫度為攝氏 100, 表示找不到溫度計
-                    // TODO: 改善異常處理方式
-                    int temp = (int)signal.getDouble(SignalBuilder.D_CELSIUS);
-                    String tempText = (temp!=100) ? String.format("%d°C", temp) : "";
-                    mTxvTemperature.setText(tempText);
-                    break;
-                case SignalBuilder.TYPE_BATTERY:
-                    String levelText = String.format("%d%%", signal.getInt(SignalBuilder.I_LEVEL));
-                    mTxvBattery.setText(levelText);
-                    break;
-                case SignalBuilder.TYPE_LIGHT:
-                    // TODO: 面板主題控制
-                    int lux = signal.getInt(SignalBuilder.I_LUX);
-                    //Log.d(TAG, String.format("環境亮度: %d lux", lux));
-                    break;
-                case SignalBuilder.TYPE_SHIFTER:
-                    int front = signal.getInt(SignalBuilder.I_FRONT);
-                    int rear  = signal.getInt(SignalBuilder.I_REAR);
-                    String shifterText = String.format("%d/%d", front, rear);
-                    mTxvShifter.setText(shifterText);
-                    break;
-                case SignalBuilder.TYPE_SENSOR_ERROR:
-                    Toast.makeText(getActivity(), "藍牙感應器發生錯誤，請關閉藍牙再重開", Toast.LENGTH_SHORT).show();
-                    break;
-                case SignalBuilder.TYPE_UNKNOWN:
-                    // TODO: 想想看發生時要怎麼處理
-                    break;
-            }
-        }
-
-    };
 
     /**
      * 數值合理化
@@ -334,151 +234,148 @@ public class PanelFragment extends Fragment {
         pinBuffer.eraseColor(Color.TRANSPARENT);
         Canvas cv = new Canvas(pinBuffer);
         cv.drawBitmap(mBmpPin, matrix, new Paint());
-        pinView.setImageBitmap(pinBuffer); // TODO: 這動作似乎效能不大好，可能要抽離比較好作單元測試
+
+        // TODO 這動作似乎效能不大好，可能要抽離比較好作單元測試
+        pinView.setImageBitmap(pinBuffer);
     }
 
-    /**
-     * 設定速度
-     *
-     * @param speed 速度值 (km/hr)
-     */
-    public void updateSpeed(int speed) {
-        if (speed!=mLatestSpeed) {
-            // (省電) 速度有改變才計算
-            int prevSpeed = mLatestSpeed;
-            mLatestSpeed = getReasonableValue(speed, MAX_SPEED);
+    private SignalUpdater mSignalUpdater = new SignalUpdater() {
 
-            // 建立 n 個漸進分解動作
-            int STEP_COUNT = 5;
-            float diffSpeed = mLatestSpeed - prevSpeed;
-            mGradualSpeed.clear();
-            for (int i=1;i<=STEP_COUNT-1;i++) {
-                mGradualSpeed.add(prevSpeed + (diffSpeed*i/STEP_COUNT));
+        @Override
+        public void updateHeartRate(int rate, int count, int calories) {
+            rate = getReasonableValue(rate, MAX_HEART_RATE);
+            mTxvHeartRate.setText(String.format("%d", rate));
+
+            calories = getReasonableValue(1000-calories, MAX_CALORIES);
+            float drawDegrees = getAngleOfValue(calories, MAX_CALORIES, 150, 30);
+            drawRotatedPin(drawDegrees, 25, 25, mBmpCaloriesPin, mIvCalories);
+        }
+
+        @Override
+        public void updateBikeCadence(int rpm, long crankRev) {
+            if (rpm!=mLatestCadence) {
+                // (省電) 速度有改變才計算
+                int prevCadence = mLatestCadence;
+                mLatestCadence = getReasonableValue(rpm, MAX_CADENCE);
+
+                // 建立 n 個漸進分解動作
+                int STEP_COUNT = 5;
+                float diffCadence = mLatestCadence - prevCadence;
+                mGradualCadence.clear();
+                for (int i=1;i<=STEP_COUNT-1;i++) {
+                    mGradualCadence.add(prevCadence + (diffCadence * i / STEP_COUNT));
+                }
+
+                // 最後一個為最終動作
+                mGradualCadence.add((float)mLatestCadence);
             }
+        }
 
-            // 最後一個為最終動作
-            mGradualSpeed.add((float)mLatestSpeed);
-
+        @Override
+        public void updateBikeSpeed(double kmhr, double distance, long wheelRev) {
+            int speed = (int)kmhr;
             if (speed==0) {
-                mIvWheel.setImageLevel(WHEEL_STARTED);
-                mIvCat.setImageLevel(CAT_STOP);
-            } else {
-                if (speed>20) {
-                    mIvWheel.setImageLevel(WHEEL_FAST);
-                    mIvCat.setImageLevel(CAT_RUN_FAST);
+                Log.d(TAG, "zeroize()");
+            }
+            if (speed!=mLatestSpeed) {
+                // (省電) 速度有改變才計算
+                int prevSpeed = mLatestSpeed;
+                mLatestSpeed = getReasonableValue(speed, MAX_SPEED);
+
+                // 建立 n 個漸進分解動作
+                int STEP_COUNT = 5;
+                float diffSpeed = mLatestSpeed - prevSpeed;
+                mGradualSpeed.clear();
+                for (int i=1;i<=STEP_COUNT-1;i++) {
+                    mGradualSpeed.add(prevSpeed + (diffSpeed*i/STEP_COUNT));
+                }
+
+                // 最後一個為最終動作
+                mGradualSpeed.add((float)mLatestSpeed);
+
+                if (speed==0) {
+                    mIvWheel.setImageLevel(WHEEL_STARTED);
+                    mIvCat.setImageLevel(CAT_STOP);
                 } else {
-                    mIvWheel.setImageLevel(WHEEL_SLOW);
-                    mIvCat.setImageLevel(CAT_RUN_SLOW);
+                    if (speed>20) {
+                        mIvWheel.setImageLevel(WHEEL_FAST);
+                        mIvCat.setImageLevel(CAT_RUN_FAST);
+                    } else {
+                        mIvWheel.setImageLevel(WHEEL_SLOW);
+                        mIvCat.setImageLevel(CAT_RUN_SLOW);
+                    }
                 }
             }
-        }
-    }
 
-    /**
-     * 設定距離值
-     *
-     * @param distance 距離 (km)
-     */
-    public void updateDistance(double distance) {
-        ImageView[] digitView = new ImageView[] {
-            mIvDN1,
-            mIvD0,
-            mIvD1,
-            mIvD2
-        };
+            // update distance
+            ImageView[] digitView = new ImageView[] {
+                    mIvDN1,
+                    mIvD0,
+                    mIvD1,
+                    mIvD2
+            };
 
-        // 改以 100m 為單位處理
-        int dist100 = Math.min((int)(distance*10), MAX_DISTANCE);
+            // 改以 100m 為單位處理
+            int dist100 = Math.min((int)(distance*10), MAX_DISTANCE);
 
-        // 取每一位的數字
-        for (int i=0;i<4;i++) {
-            int d = dist100 % 10;
-            dist100/=10;
-            digitView[i].setImageLevel(d);
-        }
-    }
-
-    /**
-     * 設定踏頻
-     *
-     * @param cadence 踏頻值
-     */
-    public void updateCadence(int cadence) {
-        if (cadence!=mLatestCadence) {
-            // (省電) 速度有改變才計算
-            int prevCadence = mLatestCadence;
-            mLatestCadence = getReasonableValue(cadence, MAX_CADENCE);
-
-            // 建立 n 個漸進分解動作
-            int STEP_COUNT = 5;
-            float diffCadence = mLatestCadence - prevCadence;
-            mGradualCadence.clear();
-            for (int i=1;i<=STEP_COUNT-1;i++) {
-                mGradualCadence.add(prevCadence + (diffCadence * i / STEP_COUNT));
+            // 取每一位的數字
+            for (int i=0;i<4;i++) {
+                int d = dist100 % 10;
+                dist100/=10;
+                digitView[i].setImageLevel(d);
             }
-
-            // 最後一個為最終動作
-            mGradualCadence.add((float)mLatestCadence);
         }
-    }
 
-    /**
-     * 設定剩餘熱量
-     *
-     * @param calories 剩餘熱量值
-     */
-    public void updateCalories(int calories) {
-        calories = getReasonableValue(1000-calories, MAX_CALORIES);
-        float drawDegrees = getAngleOfValue(calories, MAX_CALORIES, 150, 30);
-        drawRotatedPin(drawDegrees, 25, 25, mBmpCaloriesPin, mIvCalories);
-    }
+        @Override
+        public void updateBikePower(double powerWatt) {
+            int power = (int)powerWatt;
+            power = getReasonableValue(power, MAX_POWER);
+            mTxvPower.setText(String.format("%d", power));
+        }
 
-    /**
-     * 設定心率
-     *
-     * @param heart_rate 心率值
-     */
-    public void updateHeartRate(int heart_rate) {
-        heart_rate = getReasonableValue(heart_rate, MAX_HEART_RATE);
-        mTxvHeartRate.setText(String.format("%d", heart_rate));
-    }
+        @Override
+        public void updatePosition(double lat, double lng, double alt, double kmhr, long time, double distance) {
+            if (!mSettings.hasBikeSpeedSensor()) {
+                updateBikeSpeed(kmhr, distance, 0);
+            }
+        }
+        @Override
+        public void updateBattery(double percent, int level, int scale, int plugged) {
+            int percentInt = (int)percent;
+            if (percentInt>0) {
+                String levelText = String.format("%d%%", (int)percent);
+                mTxvBattery.setText(levelText);
+            } else {
+                mTxvBattery.setText("");
+            }
+        }
 
-    /**
-     * 設定功率
-     *
-     * @param power 功率值
-     */
-    public void updatePower(int power) {
-        power = getReasonableValue(power, MAX_POWER);
-        mTxvPower.setText(String.format("%d", power));
-    }
+        @Override
+        public void updateState(SignalService.State state) {
+            mServiceState = state;
+            int wheel_level;
+            switch(state) {
+                case STARTED:
+                    wheel_level = WHEEL_STARTED;
+                    break;
+                case STOPPED:
+                    wheel_level = WHEEL_STOPPED;
+                    break;
+                case STARTING:
+                case STOPPING:
+                default:
+                    wheel_level = WHEEL_LOADING;
+                    break;
+            }
+            mIvWheel.setImageLevel(wheel_level);
+        }
 
-    /**
-     * 歸零
-     */
-    private void zeroize() {
-        // 不漸變欄位歸零
-        updateCalories(1000);
-        updateHeartRate(0);
-        updatePower(0);
-        updateDistance(0);
+        @Override
+        public void updateSensorError(String devId, DeviceInfo.Type devType) {
+            Toast.makeText(getActivity(), "藍牙感應器發生錯誤，請關閉藍牙再重開", Toast.LENGTH_SHORT).show();
+        }
 
-        // 漸變欄位(速度/踏頻)歸零
-        float drawDegrees;
-
-        drawDegrees = getAngleOfValue(0, MAX_SPEED, 225, -45);
-        drawRotatedPin(drawDegrees, 25, 25, mBmpSpeedPin, mIvSpeed);
-
-        drawDegrees = getAngleOfValue(0, MAX_CADENCE, 135, -135);
-        drawRotatedPin(drawDegrees, 25, 25, mBmpCadencePin, mIvCadence);
-
-        // 小貓調整至初始狀態
-        // 電量與溫度值消除
-        mIvWheel.setImageLevel(WHEEL_STOPPED);
-        mIvCat.setImageLevel(CAT_STOP);
-        mTxvBattery.setText("");
-        mTxvTemperature.setText("");
-    }
+    };
 
     /**
      * 中央控制按鈕處理 (輪子區)
@@ -492,16 +389,21 @@ public class PanelFragment extends Fragment {
             Intent intent = new Intent(getActivity(), SignalService.class);
             switch(mServiceState) {
                 case STOPPED:
+                    // 直接更新程 ING 狀態，避免空窗期連點造成錯誤
+                    mServiceState = SignalService.State.STARTING;
+                    mIvWheel.setImageLevel(WHEEL_LOADING);
                     // 開啟運動訊息服務
                     intent.putExtra("Request", SignalService.Request.START.name());
                     getActivity().startService(intent);
                     break;
                 case STARTED:
                     if (mLatestSpeed==0) {
+                        // 直接更新程 ING 狀態，避免空窗期連點造成錯誤
+                        mServiceState = SignalService.State.STOPPING;
+                        mIvWheel.setImageLevel(WHEEL_LOADING);
                         // 關閉運動訊息服務
                         intent.putExtra("Request", SignalService.Request.STOP.name());
                         getActivity().startService(intent);
-                        mHandler.removeCallbacks(mGradualTask);
                     }
                     break;
             }
@@ -519,10 +421,6 @@ public class PanelFragment extends Fragment {
 
         @Override
         public void run() {
-            if (mServiceState!=SignalService.State.STARTED) {
-                return;
-            }
-
             float drawDegrees;
 
             // 速度處理
