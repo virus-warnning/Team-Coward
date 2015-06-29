@@ -6,9 +6,6 @@ import android.app.FragmentManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.content.pm.Signature;
 import android.net.ConnectivityManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -16,7 +13,6 @@ import android.os.Handler;
 import android.support.v13.app.FragmentPagerAdapter;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -40,7 +36,6 @@ import com.tacoball.sport.signals.Utils;
 import com.tacoball.sport.signals.hal.DeviceScanner;
 
 import java.io.File;
-import java.security.MessageDigest;
 import java.util.Arrays;
 import java.util.List;
 
@@ -54,12 +49,12 @@ public class TeamCowardActivity extends Activity {
     private static final String TAG = "TeamCowardActivity";
 
     // 金手指I - 好朋友特別允許使用
-    private static final List<String> FACEBOOK_VIP = Arrays.asList(new String[] {
+    private static final List<String> FACEBOOK_VIP = Arrays.asList(
         "986315244715254", // me
-        "957596700918932"  // Smooth Tsai
-    });
+        "957596700918932"  // smooth tsai
+    );
 
-    // 金手指II
+    // 金手指II - 破解用
     private static final String GFINGER_FILE = "gfinger.txt";
 
     FrameLayout  mNaviMenu;
@@ -69,9 +64,9 @@ public class TeamCowardActivity extends Activity {
     ViewPager mPager;
     Settings mSettings;
 
-    //
+    // 各分頁
     private SensorsFragment  mSensorsFragment  = new SensorsFragment();
-    private SosFragment      mSosFragment      = new SosFragment();
+    //private SosFragment      mSosFragment      = new SosFragment();
     private PanelFragment    mPanelFragment    = new PanelFragment();
     private SettingsFragment mSettingsFragment = new SettingsFragment();
     private AboutFragment    mAboutFragment    = new AboutFragment();
@@ -101,9 +96,14 @@ public class TeamCowardActivity extends Activity {
                 mSensorsFragment.scanSensors();
                 break;
         }
-        // TODO: 0.2.5 發生過 NullPointerException
-        //super.onActivityResult(requestCode, resultCode, data);
-        //Session.getActiveSession().onActivityResult(this, requestCode, resultCode, data);
+
+        // 0.2.5 發生過 NullPointerException，如果有發生的話持續追蹤
+        try {
+            super.onActivityResult(requestCode, resultCode, data);
+            Session.getActiveSession().onActivityResult(this, requestCode, resultCode, data);
+        } catch(NullPointerException npe) {
+            FeedbackDb.e(TAG, npe);
+        }
     }
 
     /**
@@ -117,8 +117,8 @@ public class TeamCowardActivity extends Activity {
         setContentView(R.layout.main_pager);
 
         FeedbackDb.init(this);
-        FeedbackDb.debug();
-        FeedbackDb.tee();
+        //FeedbackDb.debug();
+        //FeedbackDb.tee();
 
         // 檢查是否已驗證身分
         // - 是否已驗證 (true/false)
@@ -154,7 +154,6 @@ public class TeamCowardActivity extends Activity {
             } else {
                 if (hasInternet()) {
                     checkFacebookMembership();
-                    // TODO: 以後要增加中國用的項目
                 } else {
                     checkOffline();
                 }
@@ -286,6 +285,7 @@ public class TeamCowardActivity extends Activity {
     /**
      * 顯示目前的簽章摘要
      */
+    /*
     private void showHashKey() {
         try {
             PackageInfo info = getPackageManager().getPackageInfo(
@@ -298,9 +298,9 @@ public class TeamCowardActivity extends Activity {
                 Log.d("KeyHash: ", Base64.encodeToString(md.digest(), Base64.DEFAULT));
             }
         } catch (Exception e) {
-            // TODO: ...
         }
     }
+    */
 
     /**
      * 檢查是否有網路連線
@@ -383,7 +383,7 @@ public class TeamCowardActivity extends Activity {
                         String api = response.getRequest().getGraphPath();
                         GraphObject gobj = response.getGraphObject();
 
-                        if (api==API_ME) {
+                        if (api.equals(API_ME)) {
                             String id   = (String)gobj.getProperty("id");
                             String name = (String)gobj.getProperty("name");
                             mSettings.setCustomizedString("player.auth.facebook_id", id);
@@ -393,7 +393,7 @@ public class TeamCowardActivity extends Activity {
                             sendRequest(API_MEMBERS, PARAMS_MEMBERS);
                         }
 
-                        if (api==API_MEMBERS) {
+                        if (api.equals(API_MEMBERS)) {
                             List<GraphObject> objects = gobj.getPropertyAsList("data", GraphObject.class);
                             if (objects.size()>0) {
                                 mHandler.postDelayed(new Runnable() {
@@ -404,13 +404,9 @@ public class TeamCowardActivity extends Activity {
                                 }, 1000);
                             } else {
                                 String id = mSettings.getCustomizedString("player.auth.facebook_id");
-                                File gfinger = null;
-
                                 if (FACEBOOK_VIP.contains(id)) {
                                     Toast.makeText(TeamCowardActivity.this, "以金手指模式登入", Toast.LENGTH_LONG).show();
                                     onAuthPassed("Facebook");         // 不屬膽小車隊，而是 VIP
-                                } else if (gfinger!=null && gfinger.exists()) {
-                                    onAuthPassed("Golden Finger II"); // 二代金手指
                                 } else {
                                     onAuthFailed();                   // 不屬膽小車隊，也不是 VIP
                                 }
@@ -518,7 +514,8 @@ public class TeamCowardActivity extends Activity {
         if (hasInternet()) {
             Toast.makeText(this, "很抱歉！膽小車隊 APP 僅供膽小車隊成員使用", Toast.LENGTH_LONG).show();
         } else {
-            Toast.makeText(this, "請開啟網路，確認您是否為膽小車隊車友", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "首次使用請開啟網路，確認您是否為膽小車隊車友", Toast.LENGTH_LONG).show();
+            finish();
         }
     }
 
@@ -592,18 +589,6 @@ class MainPagerAdapter extends FragmentPagerAdapter {
         if (logined) {
             baseId = 0;
             mFrags = mFragsApp;
-
-            /*
-            mFrags = new Fragment[] {
-                new SensorsFragment(),
-                //new SosFragment(),
-                new PanelFragment(),
-                new SettingsFragment(),
-                new AboutFragment()
-            };
-            */
-
-            // TODO: 解除帳號綁定
         } else {
             baseId = 10;
             mFrags = mFragsAuth;
