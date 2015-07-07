@@ -90,17 +90,19 @@ public class TeamCowardActivity extends Activity {
      */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        switch (requestCode) {
-            case RESULT_SCANNER_ENABLE_BT:
-                Log.d(TAG, "Bluetooth Enabled");
-                mSensorsFragment.scanSensors();
-                break;
-        }
-
-        // 0.2.5 發生過 NullPointerException，如果有發生的話持續追蹤
         try {
-            super.onActivityResult(requestCode, resultCode, data);
-            Session.getActiveSession().onActivityResult(this, requestCode, resultCode, data);
+            switch (requestCode) {
+                case RESULT_SCANNER_ENABLE_BT:
+                    // Bluetooth
+                    Log.d(TAG, "Bluetooth Enabled");
+                    mSensorsFragment.scanSensors();
+                    break;
+                default:
+                    // Facebook
+                    // 如果 data==null，super.onActivityResult() 會發生 NPE
+                    super.onActivityResult(requestCode, resultCode, data);
+                    Session.getActiveSession().onActivityResult(this, requestCode, resultCode, data);
+            }
         } catch(NullPointerException npe) {
             FeedbackDb.e(TAG, npe);
         }
@@ -117,8 +119,8 @@ public class TeamCowardActivity extends Activity {
         setContentView(R.layout.main_pager);
 
         FeedbackDb.init(this);
-        //FeedbackDb.debug();
-        //FeedbackDb.tee();
+        FeedbackDb.debug();
+        FeedbackDb.tee();
 
         // 檢查是否已驗證身分
         // - 是否已驗證 (true/false)
@@ -180,7 +182,7 @@ public class TeamCowardActivity extends Activity {
         mPager.setAdapter(mPagerAdapter);
 
         // 檢查相依套件
-        new DeviceScanner(this).checkDependencies(
+        new DeviceScanner(this, null).checkDependencies(
             R.drawable.logo,
             R.string.update_ant_title,
             R.string.update_ant_text,

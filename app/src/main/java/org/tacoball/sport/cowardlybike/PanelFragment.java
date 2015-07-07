@@ -23,7 +23,7 @@ import com.tacoball.sport.signals.SignalReceiver;
 import com.tacoball.sport.signals.SignalService;
 import com.tacoball.sport.signals.SignalUpdater;
 import com.tacoball.sport.signals.Utils;
-import com.tacoball.sport.signals.hal.DeviceInfo;
+import com.tacoball.sport.signals.hal.CommonDevice;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -77,8 +77,8 @@ public class PanelFragment extends Fragment {
     private int mLatestCadence = 1;
 
     // 漸變速度/踏頻
-    private List<Float> mGradualSpeed = new LinkedList<Float>();
-    private List<Float> mGradualCadence = new LinkedList<Float>();
+    private List<Float> mGradualSpeed = new LinkedList<>();
+    private List<Float> mGradualCadence = new LinkedList<>();
 
     // 訊號服務的工作狀態
     private SignalService.State mServiceState;
@@ -304,6 +304,8 @@ public class PanelFragment extends Fragment {
                         mIvWheel.setImageLevel(WHEEL_SLOW);
                         mIvCat.setImageLevel(CAT_RUN_SLOW);
                     }
+                    // TODO Animatable cannot work
+                    //((Animatable)mIvCat.getDrawable()).start();
                 }
             }
 
@@ -341,7 +343,7 @@ public class PanelFragment extends Fragment {
         }
         @Override
         public void updateBattery(double percent, int level, int scale, int plugged) {
-            int percentInt = (int)percent;
+            int percentInt = (int)percent*100;
             if (percentInt>0) {
                 String levelText = String.format("%d%%", (int)percent);
                 mTxvBattery.setText(levelText);
@@ -371,7 +373,7 @@ public class PanelFragment extends Fragment {
         }
 
         @Override
-        public void updateSensorError(String devId, DeviceInfo.Type devType) {
+        public void updateSensorError(String devId, CommonDevice.Type devType) {
             Toast.makeText(getActivity(), "藍牙感應器發生錯誤，請關閉藍牙再重開", Toast.LENGTH_SHORT).show();
         }
 

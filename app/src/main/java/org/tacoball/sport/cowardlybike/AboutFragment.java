@@ -6,6 +6,7 @@ import android.content.res.Resources;
 import android.graphics.Point;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,13 +18,15 @@ import com.tacoball.sport.signals.hal.DeviceScanner;
 
 public class AboutFragment extends Fragment {
 
+    private static final String TAG = "AboutFragment";
+
     /**
      * 啟動配置
      *
-     * @param inflater
-     * @param container
-     * @param savedInstanceState
-     * @return
+     * @param inflater           xxx
+     * @param container          xxx
+     * @param savedInstanceState xxx
+     * @return                   xxx
      */
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -33,10 +36,12 @@ public class AboutFragment extends Fragment {
         String version = "unknown";
         try {
             version = getActivity().getPackageManager().getPackageInfo(getActivity().getPackageName(), 0).versionName;
-        } catch(PackageManager.NameNotFoundException e) {}
+        } catch(PackageManager.NameNotFoundException e) {
+            Log.e(TAG, e.getMessage());
+        }
 
         Resources res = getResources();
-        DeviceScanner ds = new DeviceScanner(getActivity());
+        DeviceScanner ds = new DeviceScanner(getActivity(), null);
 
         String antFeature = ds.isAntCompatible() ? res.getString(R.string.available) : res.getString(R.string.not_available);
         String antVersion = ds.getAntRadioServiceVersion();

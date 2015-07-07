@@ -26,7 +26,7 @@ import android.widget.Toast;
 
 import com.tacoball.sport.signals.Settings;
 import com.tacoball.sport.signals.Utils;
-import com.tacoball.sport.signals.hal.DeviceInfo;
+import com.tacoball.sport.signals.hal.CommonDevice;
 import com.tacoball.sport.signals.hal.DeviceReceiver;
 import com.tacoball.sport.signals.hal.DeviceScanner;
 
@@ -56,16 +56,16 @@ public class SensorsFragment extends Fragment {
     int mScanCounter;
 
     // Sensor 視覺資料
-    private List<View> mViewList = new ArrayList<View>();
-    private List<DeviceInfo> mModelList = new ArrayList<DeviceInfo>();
+    private List<View> mViewList = new ArrayList<>();
+    private List<CommonDevice> mModelList = new ArrayList<>();
 
     /**
      * 啟動配置
      *
-     * @param inflater  我啊知
-     * @param container 這是
+     * @param inflater           我啊知
+     * @param container          這是
      * @param savedInstanceState 三小
-     * @return 玩意兒
+     * @return                   玩意兒
      */
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -91,8 +91,7 @@ public class SensorsFragment extends Fragment {
         mGlSensorPanel.removeAllViews();
 
         // 配置裝置掃瞄器
-        mDeviceScanner = new DeviceScanner(getActivity());
-        mDeviceScanner.setDeviceScanReceiver(mDeviceReceiver);
+        mDeviceScanner = new DeviceScanner(getActivity(), mDeviceReceiver);
 
         // 這一整段可能獨立出去比較好維護，與前面程式無相關性
         final SharedPreferences pref = getActivity().getSharedPreferences("DEFAULT", Context.MODE_PRIVATE);
@@ -192,7 +191,7 @@ public class SensorsFragment extends Fragment {
      *
      * @param devInfo 感應器資訊
      */
-    private void addSensor(DeviceInfo devInfo) {
+    private void addSensor(CommonDevice devInfo) {
         // TODO: 如果掃描到不會用到的感應器，不要做新增動作
         LinearLayout ly_sensorInfo = (LinearLayout)mInflater.inflate(R.layout.subview_sensor, mContainer, false);
         ly_sensorInfo.setOnClickListener(mOnClick);
@@ -209,7 +208,7 @@ public class SensorsFragment extends Fragment {
 
         // 第一個感應器，有時候會更新失敗，需要稍微延遲一下下
         // TODO: 如果掃描中就關閉應用程式，這裡可能有 NullPointerException 的風險
-        final DeviceInfo devInfoF = devInfo;
+        final CommonDevice devInfoF = devInfo;
         mHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -224,7 +223,7 @@ public class SensorsFragment extends Fragment {
      *
      * @param devInfo 感應器資訊
      */
-    private void updateSensor(DeviceInfo devInfo) {
+    private void updateSensor(CommonDevice devInfo) {
         LinearLayout lySensorInfo = (LinearLayout)mContainer.findViewWithTag(devInfo.getId());
 
         // 這種情況有發生的可能性 XD
@@ -249,19 +248,19 @@ public class SensorsFragment extends Fragment {
         switch(devInfo.getType()) {
             case HRM:
                 sensorNameRes = R.string.sensor_hrm;
-                sensorIconRes = (devInfo.getRadio()==DeviceInfo.Radio.ANT) ?
+                sensorIconRes = (devInfo.getRadio()==CommonDevice.Radio.ANT) ?
                         R.drawable.sensor_ant_heart :
                         R.drawable.sensor_ble_heart;
                 break;
             case CSC:
                 sensorNameRes = R.string.sensor_cadspd;
-                sensorIconRes = (devInfo.getRadio()==DeviceInfo.Radio.ANT) ?
+                sensorIconRes = (devInfo.getRadio()==CommonDevice.Radio.ANT) ?
                         R.drawable.sensor_ant_cadspd :
                         R.drawable.sensor_ble_cadspd;
                 break;
             case PWR:
                 sensorNameRes = R.string.sensor_power;
-                sensorIconRes = (devInfo.getRadio()==DeviceInfo.Radio.ANT) ?
+                sensorIconRes = (devInfo.getRadio()==CommonDevice.Radio.ANT) ?
                         R.drawable.sensor_ant_power :
                         R.drawable.sensor_ble_power;
                 break;
@@ -280,7 +279,7 @@ public class SensorsFragment extends Fragment {
 
         // BLE 名稱
         /*
-        if (devInfo.getRadio()==DeviceInfo.Radio.BLE) {
+        if (devInfo.getRadio()==CommonDevice.Radio.BLE) {
             if (!devInfo.getName().equals("")) {
                 txvSensorName.setText(devInfo.getName());
             }
@@ -304,7 +303,7 @@ public class SensorsFragment extends Fragment {
         txvManufacturer.setText(manu);
 
         // ID
-        if (devInfo.getRadio()==DeviceInfo.Radio.ANT) {
+        if (devInfo.getRadio()==CommonDevice.Radio.ANT) {
             // TODO: 這一段切割成 method 比較好，這裡和 Toast 都會用到
             int idDec = Integer.parseInt(devInfo.getId(), 16);
             String antId = String.format("0x%04x (%d)", idDec, idDec);
@@ -319,7 +318,15 @@ public class SensorsFragment extends Fragment {
         ivBatteryIcon.setImageLevel(devInfo.getBattery());
 
         // 訊號強度資訊
-        ivSignalIcon.setImageLevel(3);
+        // -50 ~   0 100% Level=4
+        // -50 ~ -65  75% Level=3
+        // -65 ~ -80  50% Level=2
+        // -80 ~ -95  25% Level=1
+        // -95 ~ -nn   0% Level=0
+        int imgLevel = (int)Math.ceil((devInfo.getRssi()+95)/15.0);
+        imgLevel = Math.max(imgLevel,0);
+        imgLevel = Math.min(imgLevel, 4);
+        ivSignalIcon.setImageLevel(imgLevel);
 
         // 配對狀況
         int borderRes = R.drawable.border_sensor;
@@ -337,7 +344,7 @@ public class SensorsFragment extends Fragment {
      * 載入已配對的感應器
      */
     private void loadSensors() {
-        List<DeviceInfo> sensors = mSettings.getPairedSensors();
+        List<CommonDevice> sensors = mSettings.getPairedSensors();
 
         // 隱藏提示訊息
         if (sensors.size()>0) {
@@ -345,7 +352,7 @@ public class SensorsFragment extends Fragment {
         }
 
         // 列出已配對裝置
-        for (DeviceInfo devInfo : sensors) {
+        for (CommonDevice devInfo : sensors) {
             addSensor(devInfo);
         }
     }
@@ -375,7 +382,7 @@ public class SensorsFragment extends Fragment {
         mTxvPrompt.setVisibility(View.INVISIBLE);
 
         // 開始掃描
-        mDeviceScanner.startScan(15);
+        mDeviceScanner.startScan(mScanCounter);
         mHandler.postDelayed(mWaiting, 1000);
     }
 
@@ -384,7 +391,7 @@ public class SensorsFragment extends Fragment {
      */
     private void selectSensor(int idx) {
         // 如果已經選過了，就忽略這個事件
-        DeviceInfo devInfo = mModelList.get(idx);
+        CommonDevice devInfo = mModelList.get(idx);
         //if (model.paired) return; // 除錯時，拿掉這行比較方便
 
         // 更新已選取裝置的視覺
@@ -395,7 +402,7 @@ public class SensorsFragment extends Fragment {
         LinearLayout view = (LinearLayout) mViewList.get(idx);
         for (int i=0;i<mModelList.size();i++) {
             if (i==idx) continue;
-            DeviceInfo anotherDevInfo = mModelList.get(i);
+            CommonDevice anotherDevInfo = mModelList.get(i);
             if (anotherDevInfo.getType()==devInfo.getType() && anotherDevInfo.isPaired()) {
                 anotherDevInfo.setPaired(false);
                 updateSensor(anotherDevInfo);
@@ -472,15 +479,15 @@ public class SensorsFragment extends Fragment {
     private DeviceReceiver mDeviceReceiver = new DeviceReceiver() {
 
         @Override
-        public void onDeviceFound(DeviceInfo devInfo) {
-            if (devInfo.getType()!=DeviceInfo.Type.UNKNOWN) {
+        public void onDeviceFound(CommonDevice devInfo) {
+            if (devInfo.getType()!=CommonDevice.Type.UNKNOWN) {
                 addSensor(devInfo);
             }
         }
 
         @Override
-        public void onDeviceUpdate(DeviceInfo devInfo) {
-            if (devInfo.getType()!=DeviceInfo.Type.UNKNOWN) {
+        public void onDeviceUpdate(CommonDevice devInfo) {
+            if (devInfo.getType()!=CommonDevice.Type.UNKNOWN) {
                 updateSensor(devInfo);
             }
         }
