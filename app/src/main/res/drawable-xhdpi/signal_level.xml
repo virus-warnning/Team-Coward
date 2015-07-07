@@ -4,5 +4,5 @@
     <item android:drawable="@drawable/signal_25" android:maxLevel="1" />
     <item android:drawable="@drawable/signal_50" android:maxLevel="2" />
     <item android:drawable="@drawable/signal_75" android:maxLevel="3" />
-    <item android:drawable="@drawable/nothing"   android:maxLevel="4" />
+    <item android:drawable="@drawable/signal_100" android:maxLevel="4" />
 </level-list>
