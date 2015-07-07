@@ -42,7 +42,6 @@
                 android:layout_alignParentRight="true"
                 android:id="@+id/iv_signal"
                 android:src="@drawable/signal_level"
-                android:background="@drawable/border_signal"
                 android:contentDescription="@string/mock_content_desc"
                 android:layout_marginRight="3dp" />
 
