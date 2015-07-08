@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<level-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:drawable="@drawable/play"          android:maxLevel="0" /> <!-- 未啟動 -->
-    <item android:drawable="@drawable/pause"         android:maxLevel="1" /> <!-- 啟動後 (靜止) -->
-    <item android:drawable="@drawable/rotating_slow" android:maxLevel="2" /> <!-- 啟動後 (慢速移動) -->
-    <item android:drawable="@drawable/rotating_fast" android:maxLevel="3" /> <!-- 啟動後 (快速移動) -->
-    <item android:drawable="@drawable/loading"       android:maxLevel="4" /> <!-- 處理中 -->
-</level-list>
