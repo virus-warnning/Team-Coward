@@ -11,7 +11,6 @@ import android.graphics.Paint;
 import android.graphics.drawable.Animatable;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -37,7 +36,7 @@ import java.util.List;
 public class PanelFragment extends Fragment {
 
     // 除錯標籤
-    private static final String TAG = "BikePanelFragment";
+    //private static final String TAG = "PanelFragment";
 
     // 六項數據的最大值
     private static final int MAX_SPEED      = 60;
@@ -58,7 +57,11 @@ public class PanelFragment extends Fragment {
     private ImageView mIvCatStop;
     private ImageView mIvCatFast;
     private ImageView mIvCatSlow;
-    private ImageView mIvWheel;
+    private ImageView mIvWheelFast;
+    private ImageView mIvWheelSlow;
+    private ImageView mIvLoading;
+    private ImageView mIvControl;
+    private ImageView mIvSave;
     private TextView  mTxvHeartRate;
     private TextView  mTxvPower;
     private TextView  mTxvBattery;
@@ -83,23 +86,19 @@ public class PanelFragment extends Fragment {
     private List<Float> mGradualCadence = new LinkedList<>();
 
     // 訊號服務的工作狀態
-    private SignalService.State mServiceState;
+    private SignalService.State mServiceState = SignalService.State.STOPPED;
     private SignalReceiver      mSignalReceiver;
 
     // 設定值
     private Settings mSettings;
 
-    // 輪子按鈕的五種狀態
-    // drawable/wheel_status.xml
-    private static final int WHEEL_STOPPED = 0;
-    private static final int WHEEL_STARTED = 1;
-    private static final int WHEEL_SLOW    = 2;
-    private static final int WHEEL_FAST    = 3;
-    private static final int WHEEL_LOADING = 4;
-
     // 貓貓的三種狀態
     private enum CatState {STOP, SLOW, FAST}
     private CatState mCurrentCatState = CatState.STOP;
+
+    //
+    private static final int CTRL_LEVEL_PLAY  = 0;
+    private static final int CTRL_LEVEL_PAUSE = 1;
 
     /**
      * 介面初始化 (好像用不到)
@@ -133,7 +132,13 @@ public class PanelFragment extends Fragment {
         mIvCatStop = (ImageView)rootView.findViewById(R.id.iv_cat_stop);
         mIvCatFast = (ImageView)rootView.findViewById(R.id.iv_cat_fast);
         mIvCatSlow = (ImageView)rootView.findViewById(R.id.iv_cat_slow);
-        mIvWheel   = (ImageView)rootView.findViewById(R.id.iv_wheel);
+        mIvWheelFast = (ImageView)rootView.findViewById(R.id.iv_wheel_fast);
+        mIvWheelSlow = (ImageView)rootView.findViewById(R.id.iv_wheel_slow);
+        mIvLoading   = (ImageView)rootView.findViewById(R.id.iv_loading);
+
+        // 控制鈕與存檔鈕
+        mIvControl = (ImageView)rootView.findViewById(R.id.iv_control_button);
+        mIvSave    = (ImageView)rootView.findViewById(R.id.iv_save);
 
         // 距離數字
         mIvD0  = (ImageView)rootView.findViewById(R.id.iv_d0);
@@ -164,8 +169,9 @@ public class PanelFragment extends Fragment {
         //    其他初始作業
         //--------------------
 
-        // 接收輪子圖點擊事件
-        mIvWheel.setOnClickListener(mOnClick);
+        // 服務控制
+        mIvControl.setOnClickListener(mOnClick); // start/pause/resume
+        mIvSave.setOnClickListener(mOnClick);    // stop
 
         // 載入設定值
         mSettings = new Settings(getActivity());
@@ -245,41 +251,98 @@ public class PanelFragment extends Fragment {
     }
 
     /**
+     * 切換服務狀態
+     *
+     * @param newState 新狀態
+     */
+    private void setServiceState(SignalService.State newState) {
+        if (mServiceState==newState) return;
+        //Log.d(TAG, String.format("服務狀態切換成: %s", newState.name()));
+
+        switch(mServiceState) {
+            case STARTED:
+                mIvControl.setVisibility(View.INVISIBLE);
+                break;
+            case STOPPED:
+                mIvControl.setVisibility(View.INVISIBLE);
+                break;
+            case PAUSED:
+                mIvControl.setVisibility(View.INVISIBLE);
+                mIvSave.setVisibility(View.INVISIBLE);
+                break;
+            default:
+                mIvLoading.setVisibility(View.INVISIBLE);
+                ((Animatable)mIvLoading.getDrawable()).stop();
+        }
+
+        mServiceState = newState;
+
+        switch(mServiceState) {
+            case STARTED:
+                mIvControl.setImageLevel(CTRL_LEVEL_PAUSE);
+                mIvControl.setVisibility(View.VISIBLE);
+                break;
+            case STOPPED:
+                mIvControl.setImageLevel(CTRL_LEVEL_PLAY);
+                mIvControl.setVisibility(View.VISIBLE);
+                break;
+            case PAUSED:
+                mIvControl.setImageLevel(CTRL_LEVEL_PLAY);
+                mIvControl.setVisibility(View.VISIBLE);
+                mIvSave.setVisibility(View.VISIBLE);
+                break;
+            default:
+                ((Animatable)mIvLoading.getDrawable()).start();
+                mIvLoading.setVisibility(View.VISIBLE);
+        }
+    }
+
+    /**
      * 切換小貓狀態
      *
-     * @param state 小貓狀態名稱
+     * @param newState 小貓狀態名稱
      */
-    public void setCatState(CatState state) {
-        if (mCurrentCatState == state) return;
+    private void setCatState(CatState newState) {
+        if (mCurrentCatState == newState) return;
         //Log.d(TAG, String.format("小貓狀態切換成: %s", state.name()));
 
         switch (mCurrentCatState) {
             case STOP:
                 mIvCatStop.setVisibility(View.INVISIBLE);
+                mIvControl.setVisibility(View.INVISIBLE);
                 break;
             case SLOW:
                 mIvCatSlow.setVisibility(View.INVISIBLE);
                 ((Animatable)mIvCatSlow.getDrawable()).stop();
+                mIvWheelSlow.setVisibility(View.INVISIBLE);
+                ((Animatable)mIvWheelFast.getDrawable()).stop();
                 break;
             case FAST:
                 mIvCatFast.setVisibility(View.INVISIBLE);
                 ((Animatable)mIvCatFast.getDrawable()).stop();
+                mIvWheelFast.setVisibility(View.INVISIBLE);
+                ((Animatable)mIvWheelFast.getDrawable()).stop();
                 break;
         }
 
-        mCurrentCatState = state;
+        mCurrentCatState = newState;
 
         switch (mCurrentCatState) {
             case STOP:
                 mIvCatStop.setVisibility(View.VISIBLE);
+                mIvControl.setVisibility(View.VISIBLE);
                 break;
             case SLOW:
                 ((Animatable)mIvCatSlow.getDrawable()).start();
                 mIvCatSlow.setVisibility(View.VISIBLE);
+                ((Animatable)mIvWheelSlow.getDrawable()).start();
+                mIvWheelSlow.setVisibility(View.VISIBLE);
                 break;
             case FAST:
                 ((Animatable)mIvCatFast.getDrawable()).start();
                 mIvCatFast.setVisibility(View.VISIBLE);
+                ((Animatable)mIvWheelFast.getDrawable()).start();
+                mIvWheelFast.setVisibility(View.VISIBLE);
                 break;
         }
     }
@@ -319,9 +382,7 @@ public class PanelFragment extends Fragment {
         @Override
         public void updateBikeSpeed(double kmhr, double distance, long wheelRev) {
             int speed = (int)kmhr;
-            if (speed==0) {
-                Log.d(TAG, "zeroize()");
-            }
+
             if (speed!=mLatestSpeed) {
                 // (省電) 速度有改變才計算
                 int prevSpeed = mLatestSpeed;
@@ -339,14 +400,11 @@ public class PanelFragment extends Fragment {
                 mGradualSpeed.add((float)mLatestSpeed);
 
                 if (speed==0) {
-                    mIvWheel.setImageLevel(WHEEL_STARTED);
                     setCatState(CatState.STOP);
                 } else {
                     if (speed>20) {
-                        mIvWheel.setImageLevel(WHEEL_FAST);
                         setCatState(CatState.FAST);
                     } else {
-                        mIvWheel.setImageLevel(WHEEL_SLOW);
                         setCatState(CatState.SLOW);
                     }
                 }
@@ -354,10 +412,10 @@ public class PanelFragment extends Fragment {
 
             // update distance
             ImageView[] digitView = new ImageView[] {
-                    mIvDN1,
-                    mIvD0,
-                    mIvD1,
-                    mIvD2
+                mIvDN1,
+                mIvD0,
+                mIvD1,
+                mIvD2
             };
 
             // 改以 100m 為單位處理
@@ -397,22 +455,7 @@ public class PanelFragment extends Fragment {
 
         @Override
         public void updateState(SignalService.State state) {
-            mServiceState = state;
-            int wheel_level;
-            switch(state) {
-                case STARTED:
-                    wheel_level = WHEEL_STARTED;
-                    break;
-                case STOPPED:
-                    wheel_level = WHEEL_STOPPED;
-                    break;
-                case STARTING:
-                case STOPPING:
-                default:
-                    wheel_level = WHEEL_LOADING;
-                    break;
-            }
-            mIvWheel.setImageLevel(wheel_level);
+            setServiceState(state);
         }
 
         @Override
@@ -424,34 +467,40 @@ public class PanelFragment extends Fragment {
     };
 
     /**
-     * 中央控制按鈕處理 (輪子區)
+     * 服務狀態控制
      */
     private View.OnClickListener mOnClick = new View.OnClickListener() {
 
         @Override
         public void onClick(View view) {
-            Log.d(TAG, String.format("目前服務狀態: %s", mServiceState.name()));
+            String req = null;
 
-            Intent intent = new Intent(getActivity(), SignalService.class);
-            switch(mServiceState) {
-                case STOPPED:
-                    // 直接更新程 ING 狀態，避免空窗期連點造成錯誤
-                    mServiceState = SignalService.State.STARTING;
-                    mIvWheel.setImageLevel(WHEEL_LOADING);
-                    // 開啟運動訊息服務
-                    intent.putExtra("Request", SignalService.Request.START.name());
-                    getActivity().startService(intent);
-                    break;
-                case STARTED:
-                    if (mLatestSpeed==0) {
-                        // 直接更新程 ING 狀態，避免空窗期連點造成錯誤
-                        mServiceState = SignalService.State.STOPPING;
-                        mIvWheel.setImageLevel(WHEEL_LOADING);
-                        // 關閉運動訊息服務
-                        intent.putExtra("Request", SignalService.Request.STOP.name());
-                        getActivity().startService(intent);
-                    }
-                    break;
+            if (view==mIvControl) {
+                switch(mServiceState) {
+                    case STOPPED:
+                        req = SignalService.Request.START.name();
+                        setServiceState(SignalService.State.STARTING);
+                        break;
+                    case PAUSED:
+                        req = SignalService.Request.RESUME.name();
+                        setServiceState(SignalService.State.RESUMING);
+                        break;
+                    case STARTED:
+                        req = SignalService.Request.PAUSE.name();
+                        setServiceState(SignalService.State.PAUSING);
+                        break;
+                }
+            }
+
+            if (view==mIvSave) {
+                req = SignalService.Request.STOP.name();
+                setServiceState(SignalService.State.STOPPING);
+            }
+
+            if (req!=null) {
+                Intent intent = new Intent(getActivity(), SignalService.class);
+                intent.putExtra("Request", req);
+                getActivity().startService(intent);
             }
         }
 

@@ -155,19 +155,82 @@
         android:id="@+id/iv_cat_stop"
         android:src="@drawable/cat_stop"
         android:layout_centerHorizontal="true"
-        android:layout_marginBottom="94dp"
+        android:layout_marginBottom="105dp"
         android:layout_alignParentBottom="true"
         android:contentDescription="@string/mock_content_desc" />
 
     <ImageView
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:id="@+id/iv_wheel"
-        android:src="@drawable/wheel_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/iv_cat_slow"
+        android:src="@drawable/cat_run_slow"
+        android:layout_centerHorizontal="true"
+        android:layout_above="@+id/iv_wheel_slow"
+        android:visibility="invisible"
+        android:contentDescription="@string/mock_content_desc" />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/iv_cat_fast"
+        android:layout_centerHorizontal="true"
+        android:src="@drawable/cat_run_fast"
+        android:layout_above="@+id/iv_wheel_fast"
+        android:visibility="invisible"
+        android:contentDescription="@string/mock_content_desc" />
+
+    <ImageView
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:id="@+id/iv_wheel_slow"
+        android:src="@drawable/wheel_slow"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="62dp"
+        android:contentDescription="@string/mock_content_desc"
+        android:visibility="invisible" />
+
+    <ImageView
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:id="@+id/iv_wheel_fast"
+        android:src="@drawable/wheel_fast"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="62dp"
+        android:contentDescription="@string/mock_content_desc"
+        android:visibility="invisible" />
+
+    <ImageView
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:id="@+id/iv_loading"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="62dp"
+        android:contentDescription="@string/mock_content_desc"
+        android:visibility="invisible"
+        android:src="@drawable/loading" />
+
+    <ImageView
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:id="@+id/iv_control_button"
+        android:src="@drawable/control_button"
         android:layout_centerHorizontal="true"
         android:layout_alignParentBottom="true"
         android:layout_marginBottom="62dp"
         android:contentDescription="@string/mock_content_desc" />
+
+    <ImageView
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:id="@+id/iv_save"
+        android:src="@drawable/save256"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:contentDescription="@string/mock_content_desc"
+        android:visibility="invisible" />
 
     <ImageView
         android:layout_width="wrap_content"
@@ -195,33 +258,12 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="81%"
+        android:text="@string/mock_battery"
         android:id="@+id/txv_battery"
         android:layout_alignParentRight="true"
         android:layout_alignParentBottom="true"
         android:layout_marginBottom="6dp"
         android:layout_marginRight="65dp"
         android:textSize="8pt" />
-
-    <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/iv_cat_slow"
-        android:layout_centerHorizontal="true"
-        android:src="@drawable/cat_run_slow"
-        android:layout_above="@+id/iv_wheel"
-        android:visibility="invisible"
-        android:contentDescription="@string/mock_content_desc"
-        android:focusable="false" />
-
-    <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/iv_cat_fast"
-        android:layout_centerHorizontal="true"
-        android:src="@drawable/cat_run_fast"
-        android:layout_above="@+id/iv_wheel"
-        android:visibility="invisible"
-        android:contentDescription="@string/mock_content_desc" />
 
 </RelativeLayout>
