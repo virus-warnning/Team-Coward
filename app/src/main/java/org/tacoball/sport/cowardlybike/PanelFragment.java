@@ -8,6 +8,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.graphics.drawable.Animatable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -16,7 +17,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.tacoball.sport.signals.Settings;
 import com.tacoball.sport.signals.SignalReceiver;
@@ -55,7 +55,9 @@ public class PanelFragment extends Fragment {
     private ImageView mIvD1;
     private ImageView mIvD0;
     private ImageView mIvDN1;
-    private ImageView mIvCat;
+    private ImageView mIvCatStop;
+    private ImageView mIvCatFast;
+    private ImageView mIvCatSlow;
     private ImageView mIvWheel;
     private TextView  mTxvHeartRate;
     private TextView  mTxvPower;
@@ -96,11 +98,12 @@ public class PanelFragment extends Fragment {
     private static final int WHEEL_LOADING = 4;
 
     // 貓貓的三種狀態
-    // drawable/cat_status.xml
-    private static final int CAT_STOP     = 0;
-    private static final int CAT_RUN_SLOW = 1;
-    private static final int CAT_RUN_FAST = 2;
+    private enum CatState {STOP, SLOW, FAST}
+    private CatState mCurrentCatState = CatState.STOP;
 
+    /**
+     * 介面初始化 (好像用不到)
+     */
     public PanelFragment() {
         super();
     }
@@ -127,7 +130,9 @@ public class PanelFragment extends Fragment {
         mIvCalories = (ImageView)rootView.findViewById(R.id.iv_calories);
 
         // 小貓與輪子
-        mIvCat = (ImageView)rootView.findViewById(R.id.iv_cat_pink);
+        mIvCatStop = (ImageView)rootView.findViewById(R.id.iv_cat_stop);
+        mIvCatFast = (ImageView)rootView.findViewById(R.id.iv_cat_fast);
+        mIvCatSlow = (ImageView)rootView.findViewById(R.id.iv_cat_slow);
         mIvWheel   = (ImageView)rootView.findViewById(R.id.iv_wheel);
 
         // 距離數字
@@ -239,6 +244,46 @@ public class PanelFragment extends Fragment {
         pinView.setImageBitmap(pinBuffer);
     }
 
+    /**
+     * 切換小貓狀態
+     *
+     * @param state 小貓狀態名稱
+     */
+    public void setCatState(CatState state) {
+        if (mCurrentCatState == state) return;
+        //Log.d(TAG, String.format("小貓狀態切換成: %s", state.name()));
+
+        switch (mCurrentCatState) {
+            case STOP:
+                mIvCatStop.setVisibility(View.INVISIBLE);
+                break;
+            case SLOW:
+                mIvCatSlow.setVisibility(View.INVISIBLE);
+                ((Animatable)mIvCatSlow.getDrawable()).stop();
+                break;
+            case FAST:
+                mIvCatFast.setVisibility(View.INVISIBLE);
+                ((Animatable)mIvCatFast.getDrawable()).stop();
+                break;
+        }
+
+        mCurrentCatState = state;
+
+        switch (mCurrentCatState) {
+            case STOP:
+                mIvCatStop.setVisibility(View.VISIBLE);
+                break;
+            case SLOW:
+                ((Animatable)mIvCatSlow.getDrawable()).start();
+                mIvCatSlow.setVisibility(View.VISIBLE);
+                break;
+            case FAST:
+                ((Animatable)mIvCatFast.getDrawable()).start();
+                mIvCatFast.setVisibility(View.VISIBLE);
+                break;
+        }
+    }
+
     private SignalUpdater mSignalUpdater = new SignalUpdater() {
 
         @Override
@@ -295,17 +340,15 @@ public class PanelFragment extends Fragment {
 
                 if (speed==0) {
                     mIvWheel.setImageLevel(WHEEL_STARTED);
-                    mIvCat.setImageLevel(CAT_STOP);
+                    setCatState(CatState.STOP);
                 } else {
                     if (speed>20) {
                         mIvWheel.setImageLevel(WHEEL_FAST);
-                        mIvCat.setImageLevel(CAT_RUN_FAST);
+                        setCatState(CatState.FAST);
                     } else {
                         mIvWheel.setImageLevel(WHEEL_SLOW);
-                        mIvCat.setImageLevel(CAT_RUN_SLOW);
+                        setCatState(CatState.SLOW);
                     }
-                    // TODO Animatable cannot work
-                    //((Animatable)mIvCat.getDrawable()).start();
                 }
             }
 
@@ -343,9 +386,9 @@ public class PanelFragment extends Fragment {
         }
         @Override
         public void updateBattery(double percent, int level, int scale, int plugged) {
-            int percentInt = (int)percent*100;
+            int percentInt = (int)(percent*100);
             if (percentInt>0) {
-                String levelText = String.format("%d%%", (int)percent);
+                String levelText = String.format("%d%%", percentInt);
                 mTxvBattery.setText(levelText);
             } else {
                 mTxvBattery.setText("");
@@ -374,7 +417,8 @@ public class PanelFragment extends Fragment {
 
         @Override
         public void updateSensorError(String devId, CommonDevice.Type devType) {
-            Toast.makeText(getActivity(), "藍牙感應器發生錯誤，請關閉藍牙再重開", Toast.LENGTH_SHORT).show();
+            // 1.5.9 will fix it
+            // Toast.makeText(getActivity(), "藍牙感應器發生錯誤，請關閉藍牙再重開", Toast.LENGTH_SHORT).show();
         }
 
     };

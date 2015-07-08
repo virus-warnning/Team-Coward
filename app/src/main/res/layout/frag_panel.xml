@@ -152,8 +152,8 @@
     <ImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/iv_cat_pink"
-        android:src="@drawable/cat_status"
+        android:id="@+id/iv_cat_stop"
+        android:src="@drawable/cat_stop"
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="94dp"
         android:layout_alignParentBottom="true"
@@ -202,5 +202,26 @@
         android:layout_marginBottom="6dp"
         android:layout_marginRight="65dp"
         android:textSize="8pt" />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/iv_cat_slow"
+        android:layout_centerHorizontal="true"
+        android:src="@drawable/cat_run_slow"
+        android:layout_above="@+id/iv_wheel"
+        android:visibility="invisible"
+        android:contentDescription="@string/mock_content_desc"
+        android:focusable="false" />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/iv_cat_fast"
+        android:layout_centerHorizontal="true"
+        android:src="@drawable/cat_run_fast"
+        android:layout_above="@+id/iv_wheel"
+        android:visibility="invisible"
+        android:contentDescription="@string/mock_content_desc" />
 
 </RelativeLayout>
