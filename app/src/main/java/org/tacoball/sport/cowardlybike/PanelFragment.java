@@ -36,7 +36,7 @@ import java.util.List;
 public class PanelFragment extends Fragment {
 
     // 除錯標籤
-    //private static final String TAG = "PanelFragment";
+    private static final String TAG = "PanelFragment";
 
     // 六項數據的最大值
     private static final int MAX_SPEED      = 60;
@@ -45,6 +45,10 @@ public class PanelFragment extends Fragment {
     private static final int MAX_HEART_RATE = 250;
     private static final int MAX_POWER      = 999;
     private static final int MAX_DISTANCE   = 9999; // 單位 0.1km (這樣比較好計算)
+
+    // 碼錶開關鈕的 Level 值
+    private static final int CTRL_LEVEL_PLAY  = 0;
+    private static final int CTRL_LEVEL_PAUSE = 1;
 
     // 視覺物件
     private ImageView mIvSpeed;
@@ -88,6 +92,7 @@ public class PanelFragment extends Fragment {
     // 訊號服務的工作狀態
     private SignalService.State mServiceState = SignalService.State.STOPPED;
     private SignalReceiver      mSignalReceiver;
+    private long mLoadingTime;
 
     // 設定值
     private Settings mSettings;
@@ -95,10 +100,6 @@ public class PanelFragment extends Fragment {
     // 貓貓的三種狀態
     private enum CatState {STOP, SLOW, FAST}
     private CatState mCurrentCatState = CatState.STOP;
-
-    //
-    private static final int CTRL_LEVEL_PLAY  = 0;
-    private static final int CTRL_LEVEL_PAUSE = 1;
 
     /**
      * 介面初始化 (好像用不到)
@@ -257,6 +258,21 @@ public class PanelFragment extends Fragment {
      */
     private void setServiceState(SignalService.State newState) {
         if (mServiceState==newState) return;
+
+        // Loading 動畫緩衝設計
+        if (mLoadingTime>0) {
+            long tdiff = System.currentTimeMillis() - mLoadingTime;
+            if (tdiff<1200) {
+                final SignalService.State thisState = newState;
+                long delay = 1300 - tdiff;
+                Runnable r = new Runnable() {
+                    public void run() { setServiceState(thisState); }
+                };
+                mHandler.postDelayed(r, delay);
+                return;
+            }
+        }
+
         //Log.d(TAG, String.format("服務狀態切換成: %s", newState.name()));
 
         switch(mServiceState) {
@@ -273,6 +289,7 @@ public class PanelFragment extends Fragment {
             default:
                 mIvLoading.setVisibility(View.INVISIBLE);
                 ((Animatable)mIvLoading.getDrawable()).stop();
+                mLoadingTime = 0;
         }
 
         mServiceState = newState;
@@ -294,6 +311,7 @@ public class PanelFragment extends Fragment {
             default:
                 ((Animatable)mIvLoading.getDrawable()).start();
                 mIvLoading.setVisibility(View.VISIBLE);
+                mLoadingTime = System.currentTimeMillis();
         }
     }
 
@@ -303,7 +321,8 @@ public class PanelFragment extends Fragment {
      * @param newState 小貓狀態名稱
      */
     private void setCatState(CatState newState) {
-        if (mCurrentCatState == newState) return;
+        if (mCurrentCatState==newState) return;
+        if (mServiceState!=SignalService.State.STARTED) return;
         //Log.d(TAG, String.format("小貓狀態切換成: %s", state.name()));
 
         switch (mCurrentCatState) {

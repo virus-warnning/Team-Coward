@@ -62,7 +62,6 @@
     <!-- 不翻譯項目 -->
     <string name="mock_address">01:23:45:67:89:ab</string>
     <string name="mock_manufacturer">小璋丸工作室</string>
-    <string name="mock_battery">37%</string>
     <string name="mock_content_desc">...</string>
     <string name="mock_full_version">version x.y.z</string>
     <string name="mock_version">x.y.z</string>
@@ -71,6 +70,8 @@
     <string name="mock_res_y">720</string>
     <string name="mock_heart_rate">137</string>
     <string name="mock_power">174</string>
+    <string name="mock_battery">74%</string>
+    <string name="mock_nothing"></string>
 
     <!-- 偏好設定 -->
     <string-array name="gender">

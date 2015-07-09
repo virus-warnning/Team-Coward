@@ -41,11 +41,17 @@
         <!-- 訊號服務 -->
         <service android:name="com.tacoball.sport.signals.SignalService" />
 
-        <!-- 網路連線觸發程式 -->
+        <!-- 同步化服務 -->
         <service android:name="com.tacoball.sport.signals.SyncService" />
-        <receiver android:name="com.tacoball.sport.signals.SyncTrigger">
+
+        <!-- 系統狀態觸發程式 (網路/藍牙) -->
+        <receiver android:name="com.tacoball.sport.signals.SystemStateTrigger">
             <intent-filter>
                 <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
+                <action android:name="android.bluetooth.adapter.action.STATE_CHANGED" />
+                <action android:name="android.intent.action.PACKAGE_ADDED" />
+                <action android:name="android.intent.action.PACKAGE_REMOVED" />
+                <action android:name="android.intent.action.PACKAGE_FULLY_REMOVED" />
             </intent-filter>
         </receiver>
 

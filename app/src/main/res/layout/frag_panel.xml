@@ -165,9 +165,10 @@
         android:id="@+id/iv_cat_slow"
         android:src="@drawable/cat_run_slow"
         android:layout_centerHorizontal="true"
-        android:layout_above="@+id/iv_wheel_slow"
-        android:visibility="invisible"
-        android:contentDescription="@string/mock_content_desc" />
+        android:layout_marginBottom="95dp"
+        android:layout_alignParentBottom="true"
+        android:contentDescription="@string/mock_content_desc"
+        android:visibility="invisible" />
 
     <ImageView
         android:layout_width="wrap_content"
@@ -175,7 +176,8 @@
         android:id="@+id/iv_cat_fast"
         android:layout_centerHorizontal="true"
         android:src="@drawable/cat_run_fast"
-        android:layout_above="@+id/iv_wheel_fast"
+        android:layout_marginBottom="95dp"
+        android:layout_alignParentBottom="true"
         android:visibility="invisible"
         android:contentDescription="@string/mock_content_desc" />
 
@@ -258,7 +260,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/mock_battery"
+        android:text="@string/mock_nothing"
         android:id="@+id/txv_battery"
         android:layout_alignParentRight="true"
         android:layout_alignParentBottom="true"
